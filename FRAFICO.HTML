@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico da Função de Transferência de Primeira Ordem</title>
+    <script src="./node_modules/control-systems-js/dist"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body>
+    <canvas id="meuGrafico" width="400" height="400"></canvas>
+
+    <script>
+        // Parâmetros da função de transferência de primeira ordem
+        const tau = 1; // constante de tempo
+        const K = 2;   // ganho
+
+        // Criação da função de transferência de primeira ordem
+        const tf1 = new controlSystems.TransferFunction([K], [tau, 1]);
+
+        // Tempo para plotagem
+        const t = controlSystems.timeSeries({ start: 0, end: 10, dt: 0.1 });
+
+        // Resposta ao degrau
+        const stepResponse = tf1.step(t);
+
+        // Configuração do gráfico
+        const ctx = document.getElementById('meuGrafico').getContext('2d');
+        const meuGrafico = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: stepResponse.time,
+                datasets: [{
+                    label: 'Resposta ao Degrau',
+                    data: stepResponse.output,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom'
+                    },
+                    y: {
+                        min: 0
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+
+<link rel="stylesheet" href="./highlight/styles/tokyo-night-dark.css">
+<script src="./highlight/highlight.js"></script>
+
+<script>hljs.highlightAll();</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .main {
+        text-align: justify;
+    }
+
+    .fotDiag {
+        width: 100%;
+        height: 100%;
+    }
+</style>
+<script>
+    var melhoresIndividuo = [];
+    var pioresIndividuo = [];
+    var mediaIndividuos = [];
+    var numeroGeracoes = 0;
+    var melhorIndividuoResposta = null;
+    var medianaIndividuos = [];
+    var modaIndividuos = [];
+
+    var pointStyleD = 'circle';
+    var grossuraLinha = 3;
+    var suavidadeInterpolacao = 0.2;
+
+
+    function criarLista(numero) {
+        var lista = [];
+        for (var i = 1; i <= numero; i++) {
+            lista.push(i);
+        }
+        return lista;
+    }
+
+    function calcularModa(valores) {
+        const frequencia = {};
+        valores.forEach(valor => {
+            frequencia[valor] = (frequencia[valor] || 0) + 1;
+        });
+        let moda;
+        let maxFrequencia = -Infinity;
+        for (const valor in frequencia) {
+            if (frequencia[valor] > maxFrequencia) {
+                moda = valor;
+                maxFrequencia = frequencia[valor];
+            }
+        }
+        return moda;
+    }
+
+    function calcularMediana(valores) {
+        const sortedValores = valores.slice().sort((a, b) => a - b);
+        const meio = Math.floor(sortedValores.length / 2);
+        if (sortedValores.length % 2 === 0) {
+            return (sortedValores[meio - 1] + sortedValores[meio]) / 2;
+        } else {
+            return sortedValores[meio];
+        }
+    }
+    var maimoPeso = 20;
+    var maimoValor = 20;
+    var numeroItens = 10;
+
+
+    function gerarItensAleatorios(quantidade) {
+        var peso_itens = [];
+        var valor_itens = [];
+        var nome_itens = [];
+
+        for (let i = 0; i < quantidade; i++) {
+            // Gerar valores aleatórios para peso e valor
+            var peso = Math.floor(Math.random() * maimoPeso) + 1; // Valores entre 1 e 20
+            var valor = Math.floor(Math.random() * maimoValor) + 1; // Valores entre 1 e 20
+            // Gerar um nome aleatório para o item
+            var nome = 'Item ' + (i + 1);
+            // Adicionar os valores gerados aos vetores correspondentes
+            peso_itens.push(peso);
+            valor_itens.push(valor);
+            nome_itens.push(nome);
+        }
+
+        return {
+            peso_itens: peso_itens,
+            valor_itens: valor_itens,
+            nome_itens: nome_itens
+        };
+    }
+
+    // Exemplo de uso:
+    /*
+    var itens = gerarItensAleatorios(numeroItens);
+    var peso_itens = itens.peso_itens;
+    var valor_itens = itens.valor_itens;
+    var nome_itens = itens.nome_itens;
+    console.log(peso_itens);
+    console.log(valor_itens);
+    console.log(nome_itens);
+*/
+    var peso_itens = [2, 20, 9, 5, 2, 2, 2, 1, 15, 8];
+    var valor_itens = [10, 1, 9, 1, 3, 3, 3, 5, 15, 5];
+    var nome_itens = [
+        'bola', //1
+        'tijolo', //2
+        'gato', //3
+        'pedra', //4
+        'banana', //5
+        'maça', //6
+        'uva', //7
+        'calanguinho', //8
+        'ouro', //9
+        'jaca'//10
+    ];
+
+    function geraItens() {
+        itens = gerarItensAleatorios(numeroItens);
+        peso_itens = itens.peso_itens;
+        valor_itens = itens.valor_itens;
+        nome_itens = itens.nome_itens;
+        console.log(peso_itens);
+        console.log(valor_itens);
+        console.log(nome_itens);
+        mostrarItensNaTabela();
+
+    }
+
+    function algoritmoGenetico(
+        MUTATION_RATE,
+        POPULATION_SIZE,
+        MAX_GENERATIONS,
+        ELITISMO,
+        SELECTION_METHOD,
+        MAX_WEIGHT
+    ) {
+        //se vier thrue no selection_method então é pra executar o torneio, se false a roleta
+        const NUMERO_ITENS = peso_itens.length;
+        console.log(NUMERO_ITENS);
+        // Funbção para gerar um mochila aleatório
+        function geraMochilaAleatoria() {
+            //Math.random gera um n[umero aleatório entre 0 e 1]
+            const mochila = Array.from({ length: NUMERO_ITENS }, () => Math.floor(Math.random() * 2));
+            return mochila;
+
+        }
+        //função de cruzamento
+        function sexo(parent1, parent2) {
+            //selecionar qual o ponto de troca
+            const sexoPoint = Math.floor(Math.random() * (NUMERO_ITENS - 1)) + 1;
+            const litleChild = [...parent1.slice(0, sexoPoint), ...parent2.slice(sexoPoint)];
+            //retorna um novo individuo
+            return litleChild;
+        }
+
+        // função de mutação
+        function mutate(mochila) {
+            //gera 2 numeros aleatórios e realiza a troca de posição do que tem dentro de um com
+            //o que ta no outro.
+            //Talvez possa gerar um novo valor aleatório ao invés de trocar 2 posições...
+            //lembro que o joão paulo disse isso
+            const [pos1, pos2] = [Math.floor(Math.random() * NUMERO_ITENS), Math.floor(Math.random() * NUMERO_ITENS)];
+            [mochila[pos1], mochila[pos2]] = [mochila[pos2], mochila[pos1]];
+            return mochila;
+        }
+
+
+
+
+        function calculateFitness(mochila) {
+            let pesoTotal = 0;
+            let valorTotal = 0;
+            for (let i = 0; i <= mochila.length; i++) {
+                if (mochila[i] === 1) {
+                    pesoTotal += peso_itens[i];
+                    valorTotal += valor_itens[i];
+                    //console.log(`a mochila possui o elemento ${nome_itens[i]}`)
+                }
+            }
+            ///console.log(mochila);
+            console.log(pesoTotal);
+            console.log(valorTotal);
+            if (pesoTotal > MAX_WEIGHT) {
+                //return mochilaMochila.value * (1/(mochilaMochila.totalWeight / MAX_WEIGHT)*0.8);
+                return valorTotal * 0.00 * (MAX_WEIGHT / (pesoTotal)) * (MAX_WEIGHT / (pesoTotal)) * (MAX_WEIGHT / (pesoTotal) * (MAX_WEIGHT / (pesoTotal))) * MAX_WEIGHT / (pesoTotal) * MAX_WEIGHT / (pesoTotal) * MAX_WEIGHT / (pesoTotal) * MAX_WEIGHT / (pesoTotal);
+            }
+            return valorTotal;
+
+        }
+
+
+
+        function tournamentSelection(population) {
+            const tournamentSize = 5;
+            const tournament = [];
+
+            for (let i = 0; i < tournamentSize; i++) {
+                tournament.push(population[Math.floor(Math.random() * population.length)]);
+            }
+            //return tournament.reduce((max, current) => (current[1] > max[1] ? current : max));
+            return tournament.reduce((min, current) => (current[1] > min[1] ? current : min));
+        }
+
+        function rouletteWheelSelection(population) {
+            const totalFitness = population.reduce((total, individual) => total + individual[1], 0);
+            const randomValue = Math.random() * totalFitness;
+            let currentSum = 0;
+            for (const individual of population) {
+                currentSum += individual[1];
+                if (currentSum >= randomValue) {
+                    return individual;
+                }
+            }
+        }
+
+
+        let population = Array.from({ length: POPULATION_SIZE }, () => [geraMochilaAleatoria(), 0]);
+
+
+        let generation = 1
+        for (generation; generation < MAX_GENERATIONS; generation++) {
+            //Calcula a apstidão de toda a população em todo inicio do loop
+            //é o terceiro bloquinho do diagrama do jaõ paulo
+            //adiciona a lista um novo elemento, que é a aaptidão
+            //a lita vai ficar com essa cara
+            //[([0,2,3,4,5,6,7,8],20)]
+            //o vetorzinho de 8 elementos são as damas e o inteiro da tupla 
+            //CADA INDIVIDUO É UMA TUPLA
+            //A PRIMEIRA PARTE TEM A POSIÇÃO E A SEGUNDA TEM A APTIDÃO
+            population = population.map(([mochila]) => [mochila, calculateFitness(mochila)]);
+            console.log(population);
+            //separa a aptidão pra ficar mais fácil de manipular
+            //teria como sem separar, mas é dificil
+            let fitness = population.map(function (item) {
+                return item[1];
+            });
+
+            // eExibir a nova lista na console
+            //console.log(fitness);
+
+            //informaçoes
+            console.log("=========================================");
+            console.log(`estamos na ${generation} geração`);
+            console.log(`O melhor individuo tem ${Math.max(...fitness)}`);
+            console.log(`O pior individuo tem ${Math.min(...fitness)}`);
+            const meanFitness = population.reduce((total, [, fitness]) => total + fitness, 0) / POPULATION_SIZE;
+            console.log(`A média dos individuos é ${meanFitness}`);
+            const moda = calcularModa(fitness);
+            const mediana = calcularMediana(fitness);
+            console.log(`A moda dos individuos é ${moda}`);
+            console.log(`A mediana dos individuos é ${mediana}`);
+            console.log(population);
+
+            //armazendando infos pra msotrar no grafico
+            melhoresIndividuo.push(Math.max(...fitness));
+            pioresIndividuo.push(Math.min(...fitness));
+
+            modaIndividuos.push(moda);
+            medianaIndividuos.push(mediana);
+            mediaIndividuos.push(meanFitness);
+            numeroGeracoes = generation;
+
+
+            var bestmochila = Math.max(...fitness);
+            let maxIndex = fitness.indexOf(bestmochila);
+            melhorIndividuoResposta = population[maxIndex];
+
+            //cria a nova população, os filhos
+            const newPopulation = [];
+
+            //Se o usupario selecionar a opção de elitismo o melhor individuo da população
+            //anterior sempre vai ser passado pra próxima população
+            if (ELITISMO) {
+                //alert("Elitismo ligado");
+                newPopulation.push(melhorIndividuoResposta);
+            }
+
+
+            while (newPopulation.length < POPULATION_SIZE) {
+                /*
+                const parent1 = tournamentSelection(population);
+                const parent2 = tournamentSelection(population);
+                rouletteWheelSelection//implem,entar depois
+                */
+                //seleção dos individuos
+                const parent1 =
+                    SELECTION_METHOD ?
+                        rouletteWheelSelection(population) : tournamentSelection(population);
+                const parent2 =
+                    SELECTION_METHOD ?
+                        rouletteWheelSelection(population) : tournamentSelection(population);
+                //reprodução dos individuos
+                //do amor de duas variaveis nasce uma criancinha
+                //que será brutalmente assasinada caso não seja util para a resolução do problema
+                var litleChild = sexo(parent1[0], parent2[0]);
+
+                //verificação de mutação
+                if (Math.random() < MUTATION_RATE) {
+                    litleChild = mutate(litleChild);//uma criancinha
+                    //alert("mutacao");
+                }
+                newPopulation.push([litleChild, 0]);
+            }
+
+            //Atualiza a população
+            population = newPopulation;
+
+            //então...
+            //Por algum motivo tinha um desgraçado que era sempre 0
+            //population[0] = population[1];
+            //agora sumiu
+        }
+        if (!(generation < MAX_GENERATIONS)) {
+            //alert("Não foi possivel resolver o problema...");
+            console.log("Não foi possivel resolver");
+            return false;
+        }
+
+
+    }
+
+    //meuPrimeiroAlgoritmoGenetico(1000,0.1,10000,true);
+
+    function criaGrafico(melhorIndividuo, pioresIndividuo, mediaIndividuos, modaIndividuos, medianaIndividuos, geracoes) {
+        // Lógica para preencher melhorIndividuo, mediaIndividuos, pioresIndividuo e geracoes
+        geracoes = criarLista(geracoes);
+
+        var canvas = document.getElementById('myChart');
+        if (canvas) {
+            // Remove o canvas do DOM
+            canvas.parentNode.removeChild(canvas);
+        }
+
+        // Cria um novo canvas
+        var newCanvas = document.createElement('canvas');
+        newCanvas.id = 'myChart';
+        document.getElementById('grafico-container').appendChild(newCanvas);
+
+        // Criar um gráfico com Chart.js
+        var ctx = document.getElementById('myChart').getContext('2d');
+        /*
+        var pointStyleD = 'circle';
+    var grossuraLinha = 3;
+    var suavidadeInterpolacao=0.2;
+    */
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: geracoes, // Usar o número de gerações como rótulos no eixo x
+                datasets: [{
+                    label: 'Melhor Indivíduo',
+                    data: melhorIndividuo,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: grossuraLinha,
+                    fill: false,
+                    pointStyle: pointStyleD,//'circle'
+                    tension: suavidadeInterpolacao
+                }, {
+                    label: 'Média dos Indivíduos',
+                    data: mediaIndividuos,
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: grossuraLinha,
+                    fill: false,
+                    pointStyle: pointStyleD,
+                    tension: suavidadeInterpolacao
+                }, {
+                    label: 'Pior Indivíduo',
+                    data: pioresIndividuo,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: grossuraLinha,
+                    fill: false,
+                    pointStyle: pointStyleD,
+                    tension: suavidadeInterpolacao
+                }, {
+                    label: 'Moda dos Indivíduos',
+                    data: modaIndividuos,
+                    borderColor: '#e8beec',
+                    borderWidth: grossuraLinha,
+                    fill: false,
+                    pointStyle: pointStyleD,
+                    tension: suavidadeInterpolacao
+                }
+                    , {
+                    label: 'Mediana dos Indivíduos',
+                    data: medianaIndividuos,
+                    borderColor: '#efd3f2',
+                    borderWidth: grossuraLinha,
+                    fill: false,
+                    pointStyle: pointStyleD,
+                    tension: suavidadeInterpolacao
+                }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: Math.min(...pioresIndividuo) - 5
+                    }
+                }
+            }
+        });
+    }
+    function start() {
+        fechaMenu();
+        let resultado = document.getElementById("resultado");
+        let graficoContainer = document.getElementById("grafico-container");
+
+        resultado.style.display = "block";
+        graficoContainer.style.display = "block";
+
+
+
+        let tamanhoPopu = document.getElementById("tamanhoPopu").value;
+        console.log(tamanhoPopu);
+        let mutacao = document.getElementById("mutacao").value;
+        console.log(mutacao);
+        let geracoes = document.getElementById("geracoes").value;
+        console.log(geracoes);
+        let metodoSelecao = document.getElementById("metodoSelecao").value;
+        console.log(metodoSelecao);
+
+        let pesoMaimoMochila = document.getElementById("pesoMaimoMochila").value;
+        //alert(pesoMaimoMochila);
+        console.log(pesoMaimoMochila);
+
+
+        let elitismo = document.getElementById("elitismo").checked;
+        console.log(elitismo);
+
+        if (metodoSelecao === "") {
+            console.log("Undefined");
+            metodoSelecao = true;
+        }
+        if (metodoSelecao === "Roleta") {
+            console.log("Roleta");
+            metodoSelecao = false;
+
+        } if (metodoSelecao === "") {
+            console.log("Torneio");
+            metodoSelecao = true;
+        }
+
+        if (elitismo) {
+            //alert("Elitismo = true")
+            elitismo = true;
+        } else {
+            //alert("Elitismo = false")
+            //elitismo = false;
+        }
+
+        let solucaoOtima = document.getElementById("solucaoOtima");
+
+        let results = algoritmoGenetico(
+            MUTATION_RATE = mutacao / 100,
+            POPULATION_SIZE = tamanhoPopu,
+            MAX_GENERATIONS = geracoes,
+            ELITISMO = elitismo,
+            ELECTION_METHOD = metodoSelecao,
+            MAX_WEIGHT = pesoMaimoMochila
+        );
+
+        //alert("Não foi possivel resolver");
+        solucaoOtima.innerText = "O sistema encontrou uma";
+
+
+
+
+        document.getElementById("geracoesNecessarias").innerText = numeroGeracoes;
+        criaGrafico(melhoresIndividuo, pioresIndividuo, mediaIndividuos, modaIndividuos, medianaIndividuos, numeroGeracoes);
+        /*
+        console.log(melhoresIndividuo);
+        console.log(mediaIndividuos);
+        console.log(pioresIndividuo);
+        */
+        //reseta as variaveis
+        //isso deu uma dor de cabeça tremenda
+        melhoresIndividuo = [];
+        pioresIndividuo = [];
+        mediaIndividuos = [];
+        modaIndividuos = [];
+        medianaIndividuos = [];
+        numeroGeracoes = 0;
+        melhorIndividuoResposta = null;
+    }
+
+</script>
+
+<head>
+    <title></title>
+    <meta charset="utf-8">
+
+    <link rel="stylesheet" href="CSS/pico.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script>
+        var contador = 0;
+        /*
+        ['nada', 'tomateMaduro', 'tomateQuaseMaduro', 'tomateQuaseVerde', 'tomateVerde']
+        ['maoAberta', 'maoFechada', 'semMao']
+        */
+        var novs = {
+            "nada": ['#4286f4', '#325aa8', '#35495e'],
+            "tomateVerde": ['#6bff33', '#5aa832', '#35495e'],
+            "tomateQuaseVerde": ['#ffbd33', '#a88532', '#35495e'],
+            "tomateQuaseMaduro": ['#ff33d9', '#a8328a', '#35495e'],
+            "maoAberta": ['#6bff33', '#5aa832', '#35495e'],
+            "semMao": ['#ffbd33', '#a88532', '#35495e'],
+            "maoFechada": ['#ff33d9', '#a8328a', '#35495e'],
+            "tomateMaduro": ['#ff3342', '#a83247', '#35495e']
+        };
+        var themes = [
+            ["Verde", '#42b883', '#347474', '#35495e'],
+            ["Amarelo", '#ffc93c', '#ff9a3c', '#35495e'],
+            ["Azul", '#4286f4', '#325aa8', '#35495e'],
+            ["Vermelho", '#ff3342', '#a83247', '#35495e'],
+            ["Roxo", '#9b42f4', '#6532a8', '#35495e'],
+            ["Ciano", '#42f4d9', '#32a89e', '#35495e'],
+            ["Laranja", '#ff8c33', '#a87232', '#35495e'],
+            ["Rosa", '#ff33a4', '#a8326b', '#35495e'],
+            ["Verde Claro", '#6bff33', '#5aa832', '#35495e'],
+            ["Amarelo Claro", '#ffec33', '#a8a032', '#35495e'],
+            ["Azul Claro", '#33a3ff', '#3260a8', '#35495e'],
+            ["Vermelho Claro", '#ff334e', '#a8324f', '#35495e'],
+            ["Roxo Claro", '#d133ff', '#8a32a8', '#35495e'],
+            ["Ciano Claro", '#33fff3', '#32a89e', '#35495e'],
+            ["Laranja Claro", '#ffbd33', '#a88532', '#35495e'],
+            ["Rosa Claro", '#ff33d9', '#a8328a', '#35495e'],
+            ["Verde Escuro", '#194c1e', '#0e352d', '#1b2a38'],
+            ["Amarelo Escuro", '#8c7c0d', '#704a0d', '#59390d'],
+            ["Azul Escuro", '#0e1a4c', '#0d2b70', '#0d2d59'],
+            ["Vermelho Escuro", '#4c0e0e', '#700d0d', '#59100d'],
+            ["Roxo Escuro", '#3d0e4c', '#2d0d70', '#2c0d59'],
+            ["Ciano Escuro", '#0e4c48', '#0d2d70', '#0d2a59'],
+            ["Laranja Escuro", '#4c2b0e', '#70480d', '#592d0d'],
+            ["Rosa Escuro", '#4c0e2a', '#700d3b', '#59100e'],
+            ["Verde Médio", '#2c6a2f', '#214f29', '#35495e'],
+            ["Amarelo Médio", '#c4b317', '#a79d15', '#59390d'],
+            ["Azul Médio", '#294f6a', '#2d5d70', '#0d2d59'],
+            ["Vermelho Médio", '#872929', '#a22e2e', '#59100d'],
+            ["Roxo Médio", '#7a2a75', '#673574', '#4c2d59'],
+            ["Ciano Médio", '#298a87', '#2d8d99', '#35495e'],
+            ["Laranja Médio", '#9f6d2a', '#ac8139', '#592d0d'],
+            ["Rosa Médio", '#8a2a64', '#8c2d79', '#59100e'],
+            ["Verde Amarelado", '#95b542', '#809937', '#35495e'],
+            ["Amarelo Esverdeado", '#d9cc3c', '#c1b936', '#59390d'],
+            ["Azul Esverdeado", '#42a896', '#3a8b7f', '#0d2d59'],
+            ["Vermelho Esverdeado", '#a84a2e', '#94442b', '#59100d'],
+            ["Roxo Esverdeado", '#8d42a8', '#7a3495', '#4c2d59'],
+            ["Ciano Esverdeado", '#42a896', '#3a8b7f', '#35495e'],
+            ["Laranja Esverdeado", '#a8702a', '#8d682b', '#592d0d'],
+            ["Rosa Esverdeado", '#a84285', '#954275', '#59100e'],
+            ["Verde Azulado", '#2d756a', '#215d5a', '#35495e'],
+            ["Amarelo Azulado", '#c3d937', '#a6bf30', '#59390d'],
+            ["Azul Azulado", '#1f4670', '#1c3f59', '#0d2d59'],
+            ["Vermelho Azulado", '#702d2e', '#5e2c2c', '#59100d'],
+            ["Roxo Azulado", '#623d8f', '#4f3477', '#4c2d59'],
+            ["Ciano Azulado", '#1f6990', '#1d5982', '#35495e'],
+            ["Laranja Azulado", '#ac7b2a', '#996c2b', '#592d0d'],
+            ["Rosa Azulado", '#8f2a68', '#7c2b58', '#59100e'],
+            ["Verde Acinzentado", '#4c504d', '#3f4340', '#35495e'],
+            ["Amarelo Acinzentado", '#9e996c', '#888359', '#59390d'],
+            ["Azul Acinzentado", '#4c5c69', '#415057', '#0d2d59'],
+            ["Vermelho Acinzentado", '#704b4e', '#5c4244', '#59100d'],
+            ["Roxo Acinzentado", '#6a4879', '#5b3e66', '#4c2d59'],
+            ["Ciano Acinzentado", '#4c6669', '#415856', '#35495e'],
+            ["Laranja Acinzentado", '#8f7c57', '#7e704e', '#592d0d'],
+            ["Rosa Acinzentado", '#74566a', '#634a5a', '#59100e'],
+            ["Verde Amarelado Claro", '#c9d68c', '#b1c37b', '#35495e'],
+            ["Amarelo Esverdeado Claro", '#f0e798', '#dccf7f', '#59390d'],
+            ["Azul Esverdeado Claro", '#8cd4c0', '#7abbae', '#0d2d59'],
+            ["Vermelho Esverdeado Claro", '#e3a694', '#d18b7e', '#59100d'],
+            ["Roxo Esverdeado Claro", '#d9a3d8', '#c18ec4', '#4c2d59'],
+            ["Ciano Esverdeado Claro", '#8cd4c0', '#7abbae', '#35495e'],
+            ["Laranja Esverdeado Claro", '#e0bb8c', '#ccaa79', '#592d0d'],
+            ["Rosa Esverdeado Claro", '#d9a3c1', '#c18ead', '#59100e'],
+            ["Verde Azulado Claro", '#8ccdbf', '#7ab5ad', '#35495e'],
+            ["Amarelo Azulado Claro", '#f0f3a1', '#dbe36b', '#59390d'],
+            ["Azul Azulado Claro", '#6885af', '#576f94', '#0d2d59'],
+            ["Vermelho Azulado Claro", '#b88a8c', '#a3767e', '#59100d'],
+            ["Roxo Azulado Claro", '#ab8ec5', '#9a7db4', '#4c2d59'],
+            ["Ciano Azulado Claro", '#6885af', '#576f94', '#35495e'],
+            ["Laranja Azulado Claro", '#cbb08c', '#b8a178', '#592d0d'],
+            ["Rosa Azulado Claro", '#af8cc1', '#9d7bb0', '#59100e'],
+            ["Verde Acinzentado Claro", '#a7aead', '#959e9c', '#35495e'],
+            ["Amarelo Acinzentado Claro", '#d7d4ba', '#c5c0aa', '#59390d'],
+            ["Azul Acinzentado Claro", '#a7b4bd', '#959ea7', '#0d2d59'],
+            ["Vermelho Acinzentado Claro", '#bda7a8', '#ab9798', '#59100d'],
+            ["Roxo Acinzentado Claro", '#b7a8b9', '#a598a7', '#4c2d59'],
+            ["Ciano Acinzentado Claro", '#a7b4bd', '#959ea7', '#35495e'],
+            ["Laranja Acinzentado Claro", '#c8b8a2', '#b6a892', '#592d0d'],
+            ["Rosa Acinzentado Claro", '#baa7b6', '#a996a5', '#59100e']
+        ];
+
+        var mode; //modo luz
+        function changeTheme() {
+
+
+        }
+        //definição UI
+        var root = document.documentElement;
+        document.documentElement.setAttribute('data-theme', 'dark');
+        root.style.setProperty('--primary', themes[3][1]);
+        root.style.setProperty('--primary-hover', themes[3][2]);
+        root.style.setProperty('--primary-focus', themes[3][3]);
+        root.style.setProperty('--primary-inverse', '#FFF');
+
+        function changeMode() {
+            var botao = document.getElementById("controlaTema");
+            var root = document.documentElement;
+
+            botao.innerText = "Modo " + themes[contador][0];
+            localStorage.setItem("contador", contador);
+            root.style.setProperty('--primary', themes[contador][1]);
+            root.style.setProperty('--primary-hover', themes[contador][2]);
+            root.style.setProperty('--primary-focus', themes[contador][3]);
+            root.style.setProperty('--primary-inverse', '#FFF');
+
+            contador++;
+            if (contador >= 50) {
+                contador = 0;
+            }
+        }
+
+
+        function mudaUi(msg) {
+            //console.log(novs[msg]);
+            var root = document.documentElement;
+            root.style.setProperty('--primary', novs[msg][1]);
+            root.style.setProperty('--primary-hover', novs[msg][2]);
+            root.style.setProperty('--primary-focus', novs[msg][2]);
+            root.style.setProperty('--primary-inverse', '#FFF');
+
+            contador++;
+            if (contador >= 50) {
+                contador = 0;
+            }
+        }
+
+
+
+        mode = parseInt(localStorage.getItem("mode"));
+        contador = parseInt(localStorage.getItem("contador"));
+        if (isNaN(contador)) {
+            contador = 0;
+        }
+        console.log("A variavel mode está: " + localStorage.getItem("mode"));
+        console.log(mode); // Outputs: Hello
+        console.log(contador); // Outputs: World
+
+        function updatePopulationSize() {
+            var slider = document.getElementById("tamanhoPopu");
+            var value = slider.value;
+            var span = document.getElementById("populationSize");
+            span.textContent = value;
+        }
+
+        function updateNumItens() {
+            var slider = document.getElementById("numItens");
+            var value = slider.value;
+            var span = document.getElementById("numItensSize");
+            span.textContent = value;
+
+
+            numeroItens = value;
+
+        }
+
+        function updateValorMaimo() {
+            var slider = document.getElementById("valorMaimo");
+            var value = slider.value;
+            var span = document.getElementById("valorMaimoSize");
+            span.textContent = value;
+
+            maimoValor = value;
+        }
+        function updatePesoMaimo() {
+            var slider = document.getElementById("pesoMaimo");
+            var value = slider.value;
+            var span = document.getElementById("pesoMaimoSize");
+            span.textContent = value;
+            maimoPeso = value;
+
+        }
+
+
+
+        function updateGeracao() {
+            var slider = document.getElementById("geracoes");
+            var value = slider.value;
+            var span = document.getElementById("geracoesSize");
+            span.textContent = value;
+        }
+
+        function updatePesoMaimoMochila() {
+            var slider = document.getElementById("pesoMaimoMochila");
+            var value = slider.value;
+            var span = document.getElementById("pesoMaimoMochilaSize");
+            span.textContent = value;
+        }
+        function updateGrossura() {
+            var slider = document.getElementById("grossuraLinha");
+            var value = slider.value;
+            var span = document.getElementById("grossuraSize");
+            span.textContent = value;
+            grossuraLinha = value;
+        }
+        function updateSuavidade() {
+            var slider = document.getElementById("suavidade");
+            var value = slider.value;
+            var span = document.getElementById("suavidadeSize");
+            span.textContent = value;
+            suavidadeInterpolacao = value / 100;
+        }
+
+        function updateFigura() {
+            var tipoFigura = document.getElementById("figura");
+            var value = tipoFigura.value;
+            //alert(value);
+            pointStyleD = value;
+
+            if (value === "false") {
+                pointStyleD = false;
+            }
+            //grossuraLinha=value;
+        }
+
+
+        function updateInterpo() {
+            var slider = document.getElementById("interpo");
+            var value = slider.value;
+            var span = document.getElementById("interpoSize");
+            span.textContent = value;
+            suavidadeInterpolacao = value / 100;
+        }
+
+        function uptadeMutacao() {
+            var slider = document.getElementById("mutacao");
+            var value = slider.value;
+            var span = document.getElementById("mutacaoSize");
+            span.textContent = value;
+        }
+
+    </script>
+</head>
+
+<body>
+    <hr>
+    <div>
+        <script src="jquery.js"></script>
+        <link rel="stylesheet" href="css/chessboard-1.0.0.css">
+
+        <div id="carrinhos" class="container">
+            <h2>Desenvolvimento de um Site Didático para o Ensino de Algoritmos Genéticos
+            </h2>
+            <p>
+                Ronald José Contijo<br>
+                Dr. João Paulo Lima Silva Almeida
+
+            </p>
+            <span class="cardCarrinho">
+                <article class="grid">
+
+                    <div>
+                        <h3>Introdução</h3>
+                        <p class="main">
+                            Os algoritmos genéticos(AGs) são uma classe de métodos de otimização e busca inspirados no
+                            processo natural de
+                            evolução descrito por Charles Darwin. Nos AGs soluções para o problema em questão são
+                            representadas como
+                            <strong>indivíduos</strong>, e esses individuos são submetidos a operadores de
+                            <strong>seleção</strong>,
+                            <strong>cruzamento</strong> e <strong>mutação</strong>
+                            para gerar as
+                            melhores caracteristicas evolutivas. Da mesma forma com que acontece na natureza, eiste um
+                            método de <strong>avaliação</strong>
+                            dessa <strong>população</strong> (grupo de individuos), e os mais adaptados (os que estão
+                            mais próimos de uma
+                            boa solução)
+                            possuem mais chanses de se reproduzir aeuadamente e passar seus <strong>genes</strong> (suas
+                            partes de
+                            solução) adiante.
+
+                        </p>
+                        <p class="main">
+                            Um problema clássico abordado pelos AGs é o da mochila e dos pesos.
+                            Nesse desafio, busca-se maimizar o valor dos itens que podem ser alocados em uma mochila,
+                            mas sem ultrapassar um peso limite que o saco pode suportar.
+                            Devido ao fato de ser um problema combinatório onde os passos da solução não importam (a
+                            resposta final não é um conjunto de passos, mas uma combinação de itens) ele pode ser
+                            resolvido através dos AGs.
+                        </p>
+                        <p class="main">
+                            Nesse ínterim, o presente trabalho tem como finalidade desenvolver uma
+                            página WEB com HTML (<i>HyperText Markup Language</i>), CSS (<i>Cascading Style Sheets</i>)
+                            e Javascript para demonstrar o desenvolvimento de uma implementação de GA para a resolução
+                            do problema da mochila,
+                            criar funções que permitam que o usuário modifique parametros de execução do algoritmo para
+                            verificar seus efeitos na resolução do problema e gerar gráficos informativos sobre os
+                            individuos no decorrer das iterações do algoritmo.
+
+                        </p>
+                        <p class="main">
+
+                            Esta pesquisa está dividida na conformação que se apresenta:
+                            (i) na Fundamentação Teórica são apresentadas as premissas encontradas na literatura que
+                            fundamentam a eistencia dos AGs.
+                            (ii) na seção Metodologia encontram-se as etapas da concepção do algoritmo;
+                            (iii) em Resultados e Discussões é exposto o protótipo desenvolvido na pesquisa;
+                            (iv) as derradeiras refleões estão presentes na seção de Considerações Finais.
+                        </p>
+
+                        <br>
+                    </div>
+
+
+
+                </article>
+                <article class="grid">
+                    <div>
+                        <h3>Fundamentação Teórica</h3>
+                        <p class="main">
+                            Charles Darwin, através de seus estudos da origem das espécies e de seu famoso livro
+                            "Sobre a Origem das Espécies por meio da Seleção Natural: A Preservação de Raças Favorecidas
+                            na Luta pela Vida",
+                            estabeleceu os princípios fundamentais da seleção natural, que serviram de base para o
+                            desenvolvimento dos
+                            Algoritmos Genéticos. A principal ideia que fundamenta os GAs é descrita por Darwin, C.
+                            (2003, p. 101).
+                            <br><br><small><i>...que os indivíduos mais aptos, entre
+                                    os que sobrevivem, supondo que se produzem neles variações numa direção proveitosa,
+                                    tendem a multiplicar-se em maior número que os indivíduos menos aptos.</small>
+                            </i><br><br>
+                            Essa citação encapsula o princípio central desses algoritmos: a seleção natural. No contexto
+                            dos GAs, os "indivíduos mais aptos" se referem às soluções mais eficazes para um determinado
+                            problema, representadas por indivíduos em uma população de soluções candidatas. A ideia é
+                            que, ao longo das gerações, as soluções mais bem-sucedidas (mais aptas) têm maior
+                            probabilidade de sobreviver e se reproduzir, contribuindo para a evolução da população em
+                            direção a soluções melhores.
+
+                        </p>
+                    </div>
+                    <p>
+                        <img src="darwin.jpg">
+                        <sub class="aaa"> Darwin. English Heritage/Heritage Images/Getty Images
+                        </sub>
+                    </p>
+                </article>
+                <article class="grid">
+                    <div>
+                        <p>
+                            <img class="fotDiag" src="Capturar.JPG">
+                            <sub class="aaa"><br> Fonte: João Paulo
+                            </sub>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="main">
+                            Russell e Norvig, em seu livro "Inteligência Artificial: Uma Abordagem Moderna" (2010, pg.
+                            126-129), descrevem
+                            as etapas típicas de um algoritmo genético da seguinte maneira:
+
+
+                        <ol class="main">
+                            <li><strong>Inicialização da População:</strong> Uma população inicial de soluções
+                                candidatas é gerada aleatoriamente ou de acordo com algum critério específico
+                                relacionado ao problema.</li>
+                            <li><strong>Avaliação da Aptidão (Fitness):</strong> Cada solução na população é avaliada
+                                quanto à sua aptidão para resolver o problema. Isso geralmente envolve a atribuição de
+                                uma pontuação ou valor de aptidão com base em quão bem a solução atende aos critérios
+                                estabelecidos.</li>
+                            <li><strong>Seleção:</strong> Indivíduos mais aptos na população são selecionados para
+                                reprodução com base em sua aptidão. Essa seleção pode ser realizada de várias maneiras,
+                                como seleção por torneio ou roleta.</li>
+                            <li><strong>Reprodução:</strong> Os indivíduos selecionados são combinados (cruzamento ou
+                                crossover) para produzir descendentes que herdam características de seus progenitores.
+                            </li>
+                            <li><strong>Mutação:</strong> Como Darwin escreveu em "A Origem das Espécies" (2003, p. 99),
+                                <small><i>
+                                        "...quando uma parte varia e a seleção natural acumula as variações, se
+                                        originam, por vezes, outras modificações
+                                        de natureza mais inesperada."</i></small> A importância da mutação em algoritmos
+                                genéticos
+                                está relacionada à introdução de variabilidade na
+                                população de soluções candidatas.
+
+                                Assim como na natureza, onde a variação genética é boa para a evolução das espécies,
+                                a mutação em algoritmos genéticos permite explorar novas regiões do espaço de busca.
+                                Sem a mutação, a população poderia ficar presa, limitando a capacidade do algoritmo
+                                genético de encontrar soluções decentes
+                                para o problema em questão.
+                            </li>
+                            <li><strong>Atualização da População:</strong> Os descendentes gerados substituem ou se
+                                juntam à população existente.</li>
+                            <li><strong>Critério de Parada:</strong> O processo é repetido por várias gerações ou até
+                                que um critério de parada seja atingido. Isso pode ser um número máximo de gerações ou
+                                uma
+                                quando a <strong>solução ótima</strong>(a melhor solução) encontrada.</li>
+                        </ol>
+
+                        </p>
+                    </div>
+                </article>
+
+
+                <article class="grid">
+                    <div>
+                        <h3>Metodologia</h3>
+                        <p class="main">
+                            HTML, CSS e JavaScript são três tecnologias usadas
+                            para o desenvolvimento WEB moderno. O HTML é a linguagem padrão para a
+                            criação e estruturação de páginas web,
+                            definindo a estrutura do conteúdo por meio de elementos como cabeçalhos,
+                            parágrafos, imagens e links. CSS, Folhas de Estilo em Cascata,
+                            é utilizado para dar beleza aos elementos HTML,
+                            controlando aspectos artisticos como cores,
+                            fontes, layout e animações,
+                            permitindo uma apresentação visual bela, elegante e atraente em dispositivos de telas de
+                            tamanhos variados.
+                            JavaScript é uma linguagem de programação de alto nível que permite adicionar
+                            interatividade e dinamismo às páginas web, possibilitando
+                            a criação de funcionalidades como formulários interativos,
+                            animações, manipulação do DOM (Document Object Model).
+                            Essas três tecnologias trabalham para criar essa página. HTML para definir os elementos, CSS
+                            para estilizar, e Javascript para eecutar o AG desenvolvido e dar interatividade ao sítio.
+                        </p>
+                    </div>
+                    <p>
+                        <br><br><br>
+                        <img src="html.webp">
+                        <sub class="aaa">
+                            https://www.dio.me/articles/a-jornada-no-mercado-de-trabalho-com-html-css-e-javascript
+                        </sub>
+                    </p>
+                </article>
+
+                <article>
+                    <h3>Algoritmo Genético Desenvolvido</h3>
+                    <div class="grid">
+                        <div>
+                            <h4>A anatomia do Indivíduo</h4>
+                            <p class="main">
+
+                                Nessa implementação o indivíduo é representado por um vetor binário que
+                                descreve quais itens estão ou não na mochila.
+                                Cada posição do vetor representa um item, e o valor binário nessa posição indica
+                                se o item está presente (1) ou ausente (0) na mochila.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div>
+                            <p class="main">
+                                Por exemplo, suponha que tenhamos 10 itens para escolher, representados por um vetor
+                                binário de 10 elementos:
+
+                                <strong>[1,0,1,0,1,0,1,0,1,0]</strong>
+
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+var peso_itens = [2, 20, 9, 5, 2, 2, 2, 1, 15, 8];
+var valor_itens = [10, 1, 9, 1, 3, 3, 3, 5, 15, 5];
+var nome_itens = [
+    'bola', //1
+    'tijolo', //2
+    'gato', //3
+    'pedra', //4
+    'banana', //5
+    'maça', //6
+    'uva', //7
+    'calanguinho', //8
+    'ouro', //9
+    'jaca'//10
+];
+var individuo = [1,0,1,0,1,0,1,0,1,0];
+</code></pre>
+                        </div>
+                    </div>
+                    Neste caso, os itens nas posições 1, 3, 5, 7 e 9 estão presentes na mochila, enquanto os itens nas
+                    posições 2, 4, 6 e 8 estão ausentes.
+
+                    </p>
+
+                    <div class="grid">
+                        <div>
+                            <h4>Geração da População Inicial</h4>
+                            <p class="main">
+
+                                Foi desenvolvida a função geraMochilaAleatoria para gerar um indivíduo, ela retorna um
+                                vetor com comprimento definido
+                                pela constante <strong>NUMERO_ITENS</strong> contendo 0s e 1s.<br>
+                                Para gerar a população inicial é chamado a função geraMochilaAleatoria o número de
+                                vezes equivalente ao tamanho da população, definido por
+                                <strong>POPULATION_SIZE</strong>.
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+function geraMochilaAleatoria() {
+    //Math.random gera um n[umero aleatório entre 0 e 1]
+    const mochila = Array.from(
+        { length: NUMERO_ITENS }, 
+        () => Math.floor(Math.random() * 2)
+    );
+    return mochila;  
+}
+let population = Array.from(
+    { length: POPULATION_SIZE }, 
+    () => [geraMochilaAleatoria(), 0]
+);
+    
+
+        </code></pre>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <h4>Cálculo da Aptidão</h4>
+                            <p class="main">
+                                A função desenvolvida examina uma mochila,
+                                representada por um vetor binário indicando a presença ou ausência de cada item,
+                                e calcula sua aptidão com base no peso e no valor total dos itens contidos nela.
+                                Primeiramente, a função percorre o vetor binário para determinar o peso e o valor
+                                acumulados dos itens presentes.
+                                Se o peso total excede o limite permitido, a aptidão é penalizada,
+                                multiplicando o valor da mochila por 0.1.
+                                Isso incentiva a busca por soluções com peso próximo ao limite máximo.
+                                Caso contrário, a aptidão é simplesmente o valor total dos itens presentes na mochila.
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+function calculateFitness(mochila) {
+    let pesoTotal = 0;
+    let valorTotal = 0;
+    for (let i = 0; i <= mochila.length; i++) { 
+        if (mochila[i]===1) { 
+            pesoTotal +=peso_itens[i]; 
+            valorTotal+=valor_itens[i]; 
+        } 
+    } 
+    if (pesoTotal> MAX_WEIGHT) {
+        return valorTotal *0.1;
+    }
+    return valorTotal;
+}
+        </code></pre>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div>
+                            <h4>Métodos de seleção</h4>
+                            <p class="main">
+                                Para selecionar os indivíduos para o cruzamento foram desenvolvidas
+                                duas funções.
+                                A função tournamentSelection realiza uma
+                                competição entre um número fixo de indivíduos
+                                (definido pelo tamanho do torneio)
+                                selecionados aleatoriamente da população.
+                                Cada indivíduo é avaliado com base em sua aptidão ,
+                                e o vencedor do torneio é o que possui a maior aptidão.
+                                A função rouletteWheelSelection utiliza
+                                uma roleta ponderada para selecionar os indivíduos
+                                com base em sua aptidão relativa. Cada indivíduo
+                                tem uma fatia da roleta proporcional à sua aptidão,
+                                e um valor aleatório é gerado. O indivíduo cuja fatia
+                                inclui o valor gerado é selecionado. Ambas as funções
+                                buscam garantir que os indivíduos mais bem adaptados
+                                ao ambiente tenham maior
+                                probabilidade de serem selecionados,
+                                favorecendo a evolução da população ao longo das gerações.
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+function tournamentSelection(population) {
+    const tournamentSize = 5;
+    const tournament = [];
+    //seleção de 5 criaturinhas ao acaso para o torneio
+    for (let i = 0; i < tournamentSize; i++) {
+        tournament.push(population[Math.floor(Math.random() * population.length)]);
+    }
+    //retorna o melhor deles
+    return tournament.reduce(
+        (max, current) => (current[1] > max[1] ? current : max)
+    );
+}
+function rouletteWheelSelection(population) {
+    const totalFitness = population.reduce(
+        (total, individual) => total + individual[1], 0
+    );
+    const randomValue = Math.random() * totalFitness;
+    let currentSum = 0;
+    for (const individual of population) {
+        currentSum += individual[1];
+        if (currentSum >= randomValue) {
+            return individual;
+        }
+    }
+}
+
+        </code></pre>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <h4>Métodos de seleção</h4>
+                            <p class="main">
+                                Para selecionar os indivíduos para o cruzamento foram desenvolvidas
+                                duas funções.
+                                A função tournamentSelection realiza uma
+                                competição entre um número fixo de indivíduos
+                                (definido pelo tamanho do torneio)
+                                selecionados aleatoriamente da população.
+                                Cada indivíduo é avaliado com base em sua aptidão ,
+                                e o vencedor do torneio é o que possui a maior aptidão.
+                                A função rouletteWheelSelection utiliza
+                                uma roleta ponderada para selecionar os indivíduos
+                                com base em sua aptidão relativa. Cada indivíduo
+                                tem uma fatia da roleta proporcional à sua aptidão,
+                                e um valor aleatório é gerado. O indivíduo cuja fatia
+                                inclui o valor gerado é selecionado. Ambas as funções
+                                buscam garantir que os indivíduos mais bem adaptados
+                                ao ambiente tenham maior
+                                probabilidade de serem selecionados,
+                                favorecendo a evolução da população ao longo das gerações.
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+function tournamentSelection(population) {
+    const tournamentSize = 5;
+    const tournament = [];
+    //seleção de 5 criaturinhas ao acaso para o torneio
+    for (let i = 0; i < tournamentSize; i++) {
+        tournament.push(population[Math.floor(Math.random() * population.length)]);
+    }
+    //retorna o melhor deles
+    return tournament.reduce(
+        (max, current) => (current[1] > max[1] ? current : max)
+    );
+}
+function rouletteWheelSelection(population) {
+    const totalFitness = population.reduce(
+        (total, individual) => total + individual[1], 0
+    );
+    const randomValue = Math.random() * totalFitness;
+    let currentSum = 0;
+    for (const individual of population) {
+        currentSum += individual[1];
+        if (currentSum >= randomValue) {
+            return individual;
+        }
+    }
+}
+
+        </code></pre>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <h4>Método de Mutação</h4>
+                            <p class="main">
+                                A função mutate é responsável pela mutação de um cromossomo,
+                                representado pela mochila, em um algoritmo genético.
+                                A mutação é um processo para introduzir
+                                diversidade e evitar a convergência
+                                prematura para soluções não tão boas quanto a melhor das soluções.
+                                Nessa função, são gerados dois números aleatórios
+                                (pos1 e pos2) que representam as posições dos genes na mochila.
+                                Em seguida, os genes nas posições pos1 e pos2 são trocados entre
+                                si. Caso a mutação seja benéfica o indivíduo tera mais chances de se reproduzir e passar
+                                adiante seus genes.
+                            </p>
+                        </div>
+                        <div>
+                            <br><br>
+                            <pre><code class="javascript">
+function mutate(mochila) {
+    //gera 2 numeros aleatórios 
+    //e realiza a troca de posição do que tem dentro de um com
+    //o que ta no outro.
+    const [pos1, pos2] = [
+        Math.floor(Math.random() * NUMERO_ITENS),
+        Math.floor(Math.random() * NUMERO_ITENS)
+    ];
+    [mochila[pos1], mochila[pos2]] = [
+        mochila[pos2], 
+        mochila[pos1]
+    ];
+    return mochila;
+}
+
+        </code></pre>
+                        </div>
+                    </div>
+
+
+
+                </article>
+                <article class="cardCarrinho">
+                    <h3>Conclusão</h3>
+                    <div class="grid">
+                        <div>
+                            <p class="main">
+                            <p>
+                                O algoritmo genético implementado mostrou-se suficiente na resolução do problema da
+                                mochila.
+                                Os resultados obtidos foram capazes de demonstrar a capacidade do algoritmo em encontrar
+                                soluções e a influência dos parametros de execução do algoritmo na busca pela
+                                resposta.<br>
+                            </p>
+                            <p></p>
+                            O site didático desenvolvido para ensinar
+                            algoritmos genéticos revelou-se aceitável na
+                            explanação e compreensão do problema da mochila
+                            e da aplicação dos algoritmos genéticos para sua resolução.
+
+                            Os resultados obtidos demonstraram a capacidade do algoritmo de encontrar
+                            soluções viáveis, além de evidenciar a influência dos parâmetros de
+                            execução na busca pela resposta ótima.
+                            <br>
+                            </p>
+                            <p>
+                                A interatividade proporcionada pelo site permite aos usuários
+                                experimentar diferentes configurações e observar diretamente
+                                os efeitos dessas alterações nos resultados obtidos,
+                                facilitando assim a compreensão dos conceitos dos algoritmos genéticos.
+                                <br>
+                            </p>
+                            <p>
+                                Dessa forma, o site constitui uma ferramenta decente para
+                                seres humanos interessados em aprender o básico
+                                sobre algoritmos genéticos e sua aplicação
+                                em problemas de otimização.
+
+                            </p>
+
+
+
+
+
+                            </p>
+                        </div>
+                    </div>
+                </article>
+                <article>
+                    <div>
+                        <h3>Opções para o geração de itens aleatórios</h3>
+                        <div class="">
+                            <div class="grid">
+                                <p>Número de Itens: <span id="numItensSize">10</span></p>
+                                <input type="range" id="numItens" name="numItens" min="0" value="10" max="500"
+                                    oninput="updateNumItens()">
+                            </div>
+                            <div class="grid">
+                                <p>Valor Máimo por Item: <span id="valorMaimoSize">20</span></p>
+                                <input type="range" id="valorMaimo" name="valorMaimo" min="0" value="20" max="100"
+                                    oninput="updateValorMaimo()">
+                            </div>
+                            <div class="grid">
+                                <p>Peso Máimo por Item: <span id="pesoMaimoSize">20</span></p>
+                                <input type="range" id="pesoMaimo" name="pesoMaimo" min="0" value="20" max="100"
+                                    oninput="updatePesoMaimo()">
+                            </div>
+                            <button onclick="geraItens()">Gerar Itens aleatórios</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Lista de Itens Atual</h3>
+                        <table id="tabelaItens">
+                            <!-- A tabela será gerada aqui pelo JavaScript -->
+                        </table>
+                    </div>
+                </article>
+
+                <article>
+
+                    <div id="floating">
+                        <h3>Menu de Execução Genético</h3>
+                        <p>Por favor informe os parametros de execução do algortimo!
+                        </p>
+                        <hr>
+                        <div class="grid">
+                            <p>Tamanho da População: <span id="populationSize">26</span></p>
+                            <input type="range" id="tamanhoPopu" value="26" name="tamanhoPopu" step="2" min="0"
+                                max="500" oninput="updatePopulationSize()">
+                        </div>
+                        <div class="grid">
+                            <p>Chance de Mutação: <span id="mutacaoSize">10</span>%</p>
+                            <input type="range" id="mutacao" name="mutacao" value="10" min="0" max="100"
+                                oninput="uptadeMutacao()">
+                        </div>
+                        <div class="grid">
+                            <p>Valor maximo de peso: <span id="pesoMaimoMochilaSize">20</span></p>
+                            <input type="range" id="pesoMaimoMochila" name="pesoMaimoMochila" value="20" min="0"
+                                max="1000" oninput="updatePesoMaimoMochila()">
+                        </div>
+
+                        <div class="grid">
+                            <p>Numero máximo de Gerações: <span id="geracoesSize">10</span></p>
+                            <input type="range" id="geracoes" name="geracoes" min="0" value="10" max="5000"
+                                oninput="updateGeracao()">
+                        </div>
+                        <div class="grid">
+                            <p>Operador de Seleção</p>
+                            <select id="metodoSelecao" aria-label="Selecione o método..." required>
+
+                                <option>Roleta</option>
+                                <option selected>Torneio</option>
+                            </select>
+                        </div>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" id="elitismo" name="sd" checked />
+                                Elitismo
+                            </label>
+
+                        </fieldset>
+                        <div class="grid">
+                            <button onclick="start()">Iniciar Algoritmo</button>
+                            <button onclick="fechaMenu()">Fechar Menu</button>
+                        </div>
+
+                    </div>
+                    <div>
+                        <h3>Opções para o gráfico</h3>
+                        <div class="">
+                            <div class="grid">
+                                <p>Figura do Gráfico</p>
+                                <select onchange="updateFigura()" id="figura" aria-label="Selecione..." required>
+                                    <option>false</option>
+                                    <option>triangle</option>
+                                    <option>rect</option>
+                                    <option selected>circle</option>
+                                </select>
+                            </div>
+                            <div class="grid">
+                                <p>Grossura da Linha: <span id="grossuraSize">3</span></p>
+                                <input type="range" id="grossuraLinha" name="grossuraLinha" min="0" value="3" max="10"
+                                    oninput="updateGrossura()">
+                            </div>
+                            <div class="grid">
+                                <p>Suavização da Interpolação: <span id="suavidadeSize">20</span>%</p>
+                                <input type="range" id="suavidade" name="suavidade" min="0" value="20" max="100"
+                                    oninput="updateSuavidade()">
+                            </div>
+                            <button onclick="ativaFloat()">Abrir menu do algoritmo</button>
+                        </div>
+                    </div>
+                    <div>
+
+                        <br>
+
+
+                    </div>
+                </article>
+                <article style="display: none;" id="resultado" class="grid">
+                    <div>
+                        <div>
+                            <h3>Foram necessárias <span id="geracoesNecessarias">X</span> gerações</h3>
+                            <h4 id="solucaoOtima">O sistema não obteve uma solução ótima com os parametros informados
+                            </h4>
+                            <p>Ao lado se encontra a solução encontrada pelo algoritmo</p>
+                            <p>Na div abaixo se encontram os gráficos: </p>
+                        </div>
+                        <div id="myBoard" style="width: 400px"></div>
+                    </div>
+                    <div>
+                    </div>
+                    <script>
+                        var position = {
+                            d1: 'bQ',
+                            d2: 'bQ',
+                            d3: 'bQ',
+                            d4: 'bQ',
+                            d5: 'bQ',
+                            d6: 'bQ',
+                            d7: 'bQ',
+                            d8: 'bQ',
+                        };
+
+                        var config = {
+                            draggable: true,
+                            dropOffBoard: 'snapback',
+                            position: position
+                        };
+
+                        var board = Chessboard('myBoard', config);
+
+                        function updatePosition(newPosition) {
+                            board.position(newPosition);
+                        }
+
+
+
+
+                    </script>
+                </article>
+                <article style="background-color: aliceblue;display: none;" id="grafico-container">
+                    <canvas id="myChart"></canvas>
+                </article>
+                <article>
+
+                </article>
+            </span>
+
+        </div>
+    </div>
+    <script>
+        var game = new Chess()
+        var position = {
+            a5: 'bQ',
+            b6: 'bQ',
+            c5: 'bQ',
+            d5: 'wQ',
+            e5: 'bQ',
+            f1: 'bQ',
+            g2: 'bQ',
+            h8: 'bQ',
+
+        };
+
+        var config = {
+            //draggable: true,
+            dropOffBoard: 'snapback', // this is the default
+            position: position
+        };
+        var b = null;
+
+        var whiteSquareGrey = '#a9a9a9'
+        var blackSquareGrey = '#696969'
+
+        var whiteSquareRed = '#ed0e2f'
+        var blackSquareRed = '#bf5e88'
+
+        function redSquare(square) {
+            var $square = $('#myBoard1 .square-' + square)
+
+            var background = whiteSquareRed
+            if ($square.hasClass('black-3c85d')) {
+                background = blackSquareRed
+            }
+
+            $square.css('background', background)
+        }
+
+        function greySquare(square) {
+            var $square = $('#myBoard1 .square-' + square)
+
+            var background = whiteSquareGrey
+            if ($square.hasClass('black-3c85d')) {
+                background = blackSquareGrey
+            }
+
+            $square.css('background', background)
+        }
+        var board1 = Chessboard('myBoard1', config);
+
+        function onMouseoverSquare(square, piece) {
+            // get list of possible moves for this square
+            var moves = game.moves({
+                square: square,
+                verbose: true
+            })
+
+            // exit if there are no moves available for this square
+            if (moves.length === 0) return
+
+            // highlight the square they moused over
+            greySquare(square)
+
+            // highlight the possible squares for this piece
+            for (var i = 0; i < moves.length; i++) {
+                greySquare(moves[i].to)
+            }
+        }
+
+        function diagonals(square) {
+            const fileLetters = 'abcdefgh';
+            const rankNumbers = '12345678';
+            const diagonals = [];
+
+            // Obter coordenadas da casa
+            const fileIndex = fileLetters.indexOf(square[0]);
+            const rankIndex = rankNumbers.indexOf(square[1]);
+
+            // Diagonal principal (ascendente)
+            for (let i = -Math.min(fileIndex, rankIndex); i < Math.min(8 - fileIndex, 8 - rankIndex); i++) {
+                if (i !== 0) {
+                    diagonals.push(fileLetters[fileIndex + i] + rankNumbers[rankIndex + i]);
+                }
+            }
+
+            // Diagonal secundária (descendente)
+            for (let i = -Math.min(7 - fileIndex, rankIndex); i < Math.min(fileIndex + 1, 8 - rankIndex); i++) {
+                if (i !== 0) {
+                    diagonals.push(fileLetters[fileIndex - i] + rankNumbers[rankIndex + i]);
+                }
+            }
+
+            return diagonals;
+        }
+        function getAllRelatedSquares(square) {
+            const fileLetters = 'abcdefgh';
+            const rankNumbers = '12345678';
+            const relatedSquares = [];
+
+            // Obter coordenadas da casa
+            const fileIndex = fileLetters.indexOf(square[0]);
+            const rankIndex = rankNumbers.indexOf(square[1]);
+
+            // Horizontal e vertical
+            for (let i = 0; i < 8; i++) {
+                if (i !== rankIndex) {
+                    relatedSquares.push(fileLetters[fileIndex] + rankNumbers[i]); // Vertical
+                }
+                if (i !== fileIndex) {
+                    relatedSquares.push(fileLetters[i] + rankNumbers[rankIndex]); // Horizontal
+                }
+            }
+
+            // Diagonal principal (ascendente)
+            for (let i = -Math.min(fileIndex, rankIndex); i < Math.min(8 - fileIndex, 8 - rankIndex); i++) {
+                if (i !== 0) {
+                    relatedSquares.push(fileLetters[fileIndex + i] + rankNumbers[rankIndex + i]);
+                }
+            }
+
+            // Diagonal secundária (descendente)
+            for (let i = -Math.min(7 - fileIndex, rankIndex); i < Math.min(fileIndex + 1, 8 - rankIndex); i++) {
+                if (i !== 0) {
+                    relatedSquares.push(fileLetters[fileIndex - i] + rankNumbers[rankIndex + i]);
+                }
+            }
+
+            return relatedSquares;
+        }
+        function redMarker(source) {
+            const diagonais = getAllRelatedSquares(source);
+
+            diagonais.forEach(diagonal => {
+                console.log(diagonal);
+                redSquare(diagonal);
+            });
+            console.log(diagonals(oldPos));
+            //greySquare("a1");
+        }
+        redMarker('d5');
+        /*
+        
+                function onDragMove(oldPos, newPos, source, piece, orientation) {
+                    const diagonais = diagonals(source);
+                    diagonais.forEach(diagonal => {
+                        console.log(diagonal);
+                        greySquare(diagonal);
+                    });
+                    console.log(diagonals(oldPos));
+                    //greySquare("a1");
+                }
+               */
+
+    </script>
+    <br>
+    <br>
+    <br>
+    <!-- Eu não tenho orgulho desses <br>...-->
+    <div class="container">
+        <div class="grid">
+            <button id="controlaTema" onclick="changeMode()">Mudar Cores</button>
+        </div>
+    </div>
+
+
+    <hr>
+    <footer>
+        <h3>Inserir informações aqui no Footer</h3>
+        <p>IFPR nenhum direito reservado</p>ARRUAMR REFERENCIAS
+        https://sites.icmc.usp.br/sandra/g6_t2/rainha.htm
+        <p>Email: ashusahusahusahuas@asuisahuhusa.com</p>
+        <p>Responsavel: Anonhimbu Anhuambi Asmsau</p>
+    </footer>
+</body>
+
+</html>
+<script>
+
+    changeTheme();
+    changeMode();
+
+</script>
+
+<div id="toggleFloating" onclick="ativaFloat()">Abrir Menu do Algoritmo</div>
+
+<style>
+    #toggleFloating {
+        position: fixed;
+        bottom: 20px;
+        /* Adjust as needed */
+        right: 20px;
+        background-color: #9b42f4;
+        color: #fff;
+        /* Adjust as needed */
+        padding: 10px 20px;
+        border-radius: 5%;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.4s;
+    }
+
+    #floating {
+        display: none;
+        position: fixed;
+        top: 0px;
+        /* Adjust as needed */
+        right: 0px;
+        /* Adjust as needed */
+        background-color: #444444;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 2%;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        transform: scale(0.95);
+    }
+
+    #floating:hover {
+        transform: scale(1.0);
+    }
+</style>
+<script>
+    function fechaMenu() {
+        let floatingElement = document.getElementById("floating");
+        let botaoPara = document.getElementById("toggleFloating");
+        console.log("Hum");
+        floatingElement.style.display = "none";
+        botaoPara.style.display = "block";
+    }
+    function ativaFloat() {
+        let floatingElement = document.getElementById("floating");
+        let botaoPara = document.getElementById("toggleFloating");
+
+        console.log("Hum");
+        floatingElement.style.display = "block";
+        botaoPara.style.display = "none";
+    }
+
+    function mostrarItensNaTabela() {
+        // Obtendo uma referência ao elemento da tabela onde os itens serão exibidos
+        var tabela = document.getElementById("tabelaItens");
+
+        // Limpando qualquer conteúdo anterior da tabela
+        tabela.innerHTML = "";
+
+        // Criando o cabeçalho da tabela
+        var cabecalho = tabela.createTHead();
+        var linhaCabecalho = cabecalho.insertRow();
+        var celulaNome = linhaCabecalho.insertCell();
+        var celulaPeso = linhaCabecalho.insertCell();
+        var celulaValor = linhaCabecalho.insertCell();
+        celulaNome.textContent = "Nome";
+        celulaPeso.textContent = "Peso";
+        celulaValor.textContent = "Valor";
+
+        // Adicionando os itens à tabela
+        for (var i = 0; i < nome_itens.length; i++) {
+            var linha = tabela.insertRow();
+            var celulaNomeItem = linha.insertCell();
+            var celulaPesoItem = linha.insertCell();
+            var celulaValorItem = linha.insertCell();
+            celulaNomeItem.textContent = nome_itens[i];
+            celulaPesoItem.textContent = peso_itens[i];
+            celulaValorItem.textContent = valor_itens[i];
+        }
+    }
+
+    // Chamar a função para exibir os itens na tabela quando necessário
+    mostrarItensNaTabela();
+
+</script>

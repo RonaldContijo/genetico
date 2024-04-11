@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exibir Itens em Divs</title>
+<style>
+    .grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .item {
+        width: calc(25% - 10px);
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+</style>
+</head>
+<body>
+<div class="grid" id="grid-container"></div>
+
+<script>
+    // Definindo a classe Item
+    function Item(nome, imagem, valor1, valor2) {
+        this.nome = nome;
+        this.imagem = imagem;
+        this.valor1 = valor1;
+        this.valor2 = valor2;
+    }
+
+    // Criando os itens
+    var bola = new Item("Bola", "./Img.png", 2, 10);
+    var tijolo = new Item("Tijolo", "./Img.png", 20, 1);
+    var gato = new Item("Gato", "./Img.png", 2, 11);
+    var pedra = new Item("Pedra1", "./Img.png", 10, 1);
+    var pedra1 = new Item("Pedra2", "./Img.png", 9, 1);
+    var pedra2 = new Item("Pedra3", "./Img.png", 8, 1);
+    var pedra3 = new Item("Pedra4", "./Img.png", 7, 1);
+    var pedra4 = new Item("Pedra5", "./Img.png", 4, 1);
+    var pedra5 = new Item("Pedra6", "./Img.png", 2, 1);
+    var pedra6 = new Item("Pedra7", "./Img.png", 5, 1);
+    var banana = new Item("banana", "./Img.png", 2, 3);
+    var maca = new Item("maca", "./Img.png", 2, 3);
+    var uva = new Item("uva", "./Img.png", 1, 3);
+    var calanguinho = new Item("calanguinho", "./Img.png", 1, 1);
+    var ouro = new Item("ouro", "./Img.png", 3, 100);
+    var jaca = new Item("jaca", "./Img.png", 5, 5);
+
+    var listaPossiveis = [];
+    // Adicionando os itens ao vetor listaPossiveis
+    listaPossiveis.push(bola, calanguinho, tijolo, gato, pedra1, pedra2, pedra3, pedra4, pedra5, pedra6, banana, maca, uva, ouro, jaca);
+
+    // Função para exibir os itens em divs
+    function exibirItens() {
+        var gridContainer = document.getElementById('grid-container');
+        listaPossiveis.forEach(function(item, index) {
+            if (index % 4 === 0) {
+                var rowDiv = document.createElement('div');
+                rowDiv.classList.add('grid-row');
+                gridContainer.appendChild(rowDiv);
+            }
+            var itemDiv = document.createElement('div');
+            itemDiv.classList.add('item');
+            itemDiv.innerHTML = `
+                <h3>${item.nome}</h3>
+                <img src="${item.imagem}" alt="${item.nome}">
+                <p>Valor 1: ${item.valor1}</p>
+                <p>Valor 2: ${item.valor2}</p>
+            `;
+            gridContainer.lastElementChild.appendChild(itemDiv);
+        });
+    }
+
+    // Chame a função para exibir os itens
+    exibirItens();
+</script>
+</body>
+</html>
