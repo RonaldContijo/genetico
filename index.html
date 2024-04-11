@@ -465,7 +465,7 @@
         );
 
         //alert("Não foi possivel resolver");
-        solucaoOtima.innerText = "O sistema encontrou uma";
+        solucaoOtima.innerText = "O sistema encontrou uma solução";
 
 
 
@@ -485,7 +485,10 @@
         modaIndividuos = [];
         medianaIndividuos = [];
         numeroGeracoes = 0;
-        melhorIndividuoResposta = null;
+
+        document.getElementById("melhorInd").innerText = "["+melhorIndividuoResposta[0]+"]";
+        document.getElementById("fitMe").innerText = "Valor = ["+melhorIndividuoResposta[1]+"]";
+
     }
 
 </script>
@@ -948,7 +951,8 @@
                             <p class="main">
 
                                 Nessa implementação o indivíduo é representado por um vetor binário que
-                                descreve quais itens estão ou não na mochila.
+                                descreve quais itens estão ou não na mochila assim como descrito por Chu, P.C., &
+                                Beasley, J.E. (1998).
                                 Cada posição do vetor representa um item, e o valor binário nessa posição indica
                                 se o item está presente (1) ou ausente (0) na mochila.
                             </p>
@@ -1204,373 +1208,206 @@ function mutate(mochila) {
         </code></pre>
                         </div>
                     </div>
+                    <article class="cardCarrinho">
+                        <h3>Resultados</h3>
+                        <div class="grid">
+                            <div>
+                                <p class="main">
+                                <p class="main">
+                                    Os resultados obtidos com a aplicação do algoritmo genético para resolver o
+                                    problema da mochila demonstram sua eficácia e pertinência nesse cenário específico
+                                    de otimização.
+                                    A análise dos resultados revelou que o algoritmo foi capaz de encontrar soluções
+                                    próximas do ótimo em diversas instâncias do problema,
+                                    evidenciando sua capacidade de explorar de maneira eficiente
+                                    o espaço de busca disponível.
+                                </p>
+                                <p class="main">
+
+                                    Além disso, a adaptabilidade do algoritmo a diferentes configurações do problema,
+                                    como variações no número de itens e capacidade da mochila,
+                                    não o impediu de alcançar seu objetivo.
+                                </p>
+                                <p class="main">
+                                    Os experimentos apontaram para uma tendência de convergência
+                                    do algoritmo para soluções decentes com o aumento do número de gerações,
+                                    indicando sua capacidade de encontrar soluções ótimas ou próximas do ótimo.
+
+                                </p>
+                                <p class="main">
+                                    O site didático desenvolvido para ensinar
+                                    algoritmos genéticos revelou-se aceitável na
+                                    explanação e compreensão do problema da mochila
+                                    e da aplicação dos algoritmos genéticos para sua resolução.
+                                    <br>
+                                </p>
+                                <p class="main">
+                                    A interatividade proporcionada pelo site permite aos usuários
+                                    experimentar diferentes configurações e observar diretamente
+                                    os efeitos dessas alterações nos resultados obtidos,
+                                    facilitando assim a compreensão dos conceitos dos algoritmos genéticos.
+
+                                    Dessa forma, o site constitui uma ferramenta decente para
+                                    seres humanos interessados em aprender o básico
+                                    sobre algoritmos genéticos e sua aplicação
+                                    em problemas de otimização.
+
+                                </p>
 
 
 
-                </article>
-                <article class="cardCarrinho">
-                    <h3>Conclusão</h3>
-                    <div class="grid">
+
+
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+
+
+
+
+
+                    <article>
                         <div>
-                            <p class="main">
-                            <p>
-                                O algoritmo genético implementado mostrou-se suficiente na resolução do problema da
-                                mochila.
-                                Os resultados obtidos foram capazes de demonstrar a capacidade do algoritmo em encontrar
-                                soluções e a influência dos parametros de execução do algoritmo na busca pela
-                                resposta.<br>
-                            </p>
-                            <p></p>
-                            O site didático desenvolvido para ensinar
-                            algoritmos genéticos revelou-se aceitável na
-                            explanação e compreensão do problema da mochila
-                            e da aplicação dos algoritmos genéticos para sua resolução.
-
-                            Os resultados obtidos demonstraram a capacidade do algoritmo de encontrar
-                            soluções viáveis, além de evidenciar a influência dos parâmetros de
-                            execução na busca pela resposta ótima.
-                            <br>
-                            </p>
-                            <p>
-                                A interatividade proporcionada pelo site permite aos usuários
-                                experimentar diferentes configurações e observar diretamente
-                                os efeitos dessas alterações nos resultados obtidos,
-                                facilitando assim a compreensão dos conceitos dos algoritmos genéticos.
-                                <br>
-                            </p>
-                            <p>
-                                Dessa forma, o site constitui uma ferramenta decente para
-                                seres humanos interessados em aprender o básico
-                                sobre algoritmos genéticos e sua aplicação
-                                em problemas de otimização.
-
-                            </p>
-
-
-
-
-
-                            </p>
+                            <h3>Opções para o geração de itens aleatórios</h3>
+                            <div class="">
+                                <div class="grid">
+                                    <p>Número de Itens: <span id="numItensSize">10</span></p>
+                                    <input type="range" id="numItens" name="numItens" min="0" value="10" max="500"
+                                        oninput="updateNumItens()">
+                                </div>
+                                <div class="grid">
+                                    <p>Valor Máimo por Item: <span id="valorMaimoSize">20</span></p>
+                                    <input type="range" id="valorMaimo" name="valorMaimo" min="0" value="20" max="100"
+                                        oninput="updateValorMaimo()">
+                                </div>
+                                <div class="grid">
+                                    <p>Peso Máimo por Item: <span id="pesoMaimoSize">20</span></p>
+                                    <input type="range" id="pesoMaimo" name="pesoMaimo" min="0" value="20" max="100"
+                                        oninput="updatePesoMaimo()">
+                                </div>
+                                <button onclick="geraItens()">Gerar Itens aleatórios</button>
+                            </div>
                         </div>
-                    </div>
-                </article>
-                <article>
-                    <div>
-                        <h3>Opções para o geração de itens aleatórios</h3>
-                        <div class="">
+                        <div>
+                            <h3>Lista de Itens Atual</h3>
+                            <table id="tabelaItens">
+                                <!-- A tabela será gerada aqui pelo JavaScript -->
+                            </table>
+                        </div>
+                    </article>
+
+                    <article>
+
+                        <div id="floating">
+                            <h3>Menu de Execução Genético</h3>
+                            <p>Por favor informe os parametros de execução do algortimo!
+                            </p>
+                            <hr>
                             <div class="grid">
-                                <p>Número de Itens: <span id="numItensSize">10</span></p>
-                                <input type="range" id="numItens" name="numItens" min="0" value="10" max="500"
-                                    oninput="updateNumItens()">
+                                <p>Tamanho da População: <span id="populationSize">26</span></p>
+                                <input type="range" id="tamanhoPopu" value="26" name="tamanhoPopu" step="2" min="0"
+                                    max="500" oninput="updatePopulationSize()">
                             </div>
                             <div class="grid">
-                                <p>Valor Máimo por Item: <span id="valorMaimoSize">20</span></p>
-                                <input type="range" id="valorMaimo" name="valorMaimo" min="0" value="20" max="100"
-                                    oninput="updateValorMaimo()">
+                                <p>Chance de Mutação: <span id="mutacaoSize">10</span>%</p>
+                                <input type="range" id="mutacao" name="mutacao" value="10" min="0" max="100"
+                                    oninput="uptadeMutacao()">
                             </div>
                             <div class="grid">
-                                <p>Peso Máimo por Item: <span id="pesoMaimoSize">20</span></p>
-                                <input type="range" id="pesoMaimo" name="pesoMaimo" min="0" value="20" max="100"
-                                    oninput="updatePesoMaimo()">
+                                <p>Valor maximo de peso: <span id="pesoMaimoMochilaSize">20</span></p>
+                                <input type="range" id="pesoMaimoMochila" name="pesoMaimoMochila" value="20" min="0"
+                                    max="1000" oninput="updatePesoMaimoMochila()">
                             </div>
-                            <button onclick="geraItens()">Gerar Itens aleatórios</button>
-                        </div>
-                    </div>
-                    <div>
-                        <h3>Lista de Itens Atual</h3>
-                        <table id="tabelaItens">
-                            <!-- A tabela será gerada aqui pelo JavaScript -->
-                        </table>
-                    </div>
-                </article>
 
-                <article>
-
-                    <div id="floating">
-                        <h3>Menu de Execução Genético</h3>
-                        <p>Por favor informe os parametros de execução do algortimo!
-                        </p>
-                        <hr>
-                        <div class="grid">
-                            <p>Tamanho da População: <span id="populationSize">26</span></p>
-                            <input type="range" id="tamanhoPopu" value="26" name="tamanhoPopu" step="2" min="0"
-                                max="500" oninput="updatePopulationSize()">
-                        </div>
-                        <div class="grid">
-                            <p>Chance de Mutação: <span id="mutacaoSize">10</span>%</p>
-                            <input type="range" id="mutacao" name="mutacao" value="10" min="0" max="100"
-                                oninput="uptadeMutacao()">
-                        </div>
-                        <div class="grid">
-                            <p>Valor maximo de peso: <span id="pesoMaimoMochilaSize">20</span></p>
-                            <input type="range" id="pesoMaimoMochila" name="pesoMaimoMochila" value="20" min="0"
-                                max="1000" oninput="updatePesoMaimoMochila()">
-                        </div>
-
-                        <div class="grid">
-                            <p>Numero máximo de Gerações: <span id="geracoesSize">10</span></p>
-                            <input type="range" id="geracoes" name="geracoes" min="0" value="10" max="5000"
-                                oninput="updateGeracao()">
-                        </div>
-                        <div class="grid">
-                            <p>Operador de Seleção</p>
-                            <select id="metodoSelecao" aria-label="Selecione o método..." required>
-
-                                <option>Roleta</option>
-                                <option selected>Torneio</option>
-                            </select>
-                        </div>
-                        <fieldset>
-                            <label>
-                                <input type="checkbox" id="elitismo" name="sd" checked />
-                                Elitismo
-                            </label>
-
-                        </fieldset>
-                        <div class="grid">
-                            <button onclick="start()">Iniciar Algoritmo</button>
-                            <button onclick="fechaMenu()">Fechar Menu</button>
-                        </div>
-
-                    </div>
-                    <div>
-                        <h3>Opções para o gráfico</h3>
-                        <div class="">
                             <div class="grid">
-                                <p>Figura do Gráfico</p>
-                                <select onchange="updateFigura()" id="figura" aria-label="Selecione..." required>
-                                    <option>false</option>
-                                    <option>triangle</option>
-                                    <option>rect</option>
-                                    <option selected>circle</option>
+                                <p>Numero máximo de Gerações: <span id="geracoesSize">10</span></p>
+                                <input type="range" id="geracoes" name="geracoes" min="0" value="10" max="5000"
+                                    oninput="updateGeracao()">
+                            </div>
+                            <div class="grid">
+                                <p>Operador de Seleção</p>
+                                <select id="metodoSelecao" aria-label="Selecione o método..." required>
+
+                                    <option>Roleta</option>
+                                    <option selected>Torneio</option>
                                 </select>
                             </div>
+                            <fieldset>
+                                <label>
+                                    <input type="checkbox" id="elitismo" name="sd" checked />
+                                    Elitismo
+                                </label>
+
+                            </fieldset>
                             <div class="grid">
-                                <p>Grossura da Linha: <span id="grossuraSize">3</span></p>
-                                <input type="range" id="grossuraLinha" name="grossuraLinha" min="0" value="3" max="10"
-                                    oninput="updateGrossura()">
+                                <button onclick="start()">Iniciar Algoritmo</button>
+                                <button onclick="fechaMenu()">Fechar Menu</button>
                             </div>
-                            <div class="grid">
-                                <p>Suavização da Interpolação: <span id="suavidadeSize">20</span>%</p>
-                                <input type="range" id="suavidade" name="suavidade" min="0" value="20" max="100"
-                                    oninput="updateSuavidade()">
-                            </div>
-                            <button onclick="ativaFloat()">Abrir menu do algoritmo</button>
+
                         </div>
-                    </div>
-                    <div>
-
-                        <br>
-
-
-                    </div>
-                </article>
-                <article style="display: none;" id="resultado" class="grid">
-                    <div>
                         <div>
-                            <h3>Foram necessárias <span id="geracoesNecessarias">X</span> gerações</h3>
-                            <h4 id="solucaoOtima">O sistema não obteve uma solução ótima com os parametros informados
-                            </h4>
-                            <p>Ao lado se encontra a solução encontrada pelo algoritmo</p>
-                            <p>Na div abaixo se encontram os gráficos: </p>
+                            <h3>Opções para o gráfico</h3>
+                            <div class="">
+                                <div class="grid">
+                                    <p>Figura do Gráfico</p>
+                                    <select onchange="updateFigura()" id="figura" aria-label="Selecione..." required>
+                                        <option>false</option>
+                                        <option>triangle</option>
+                                        <option>rect</option>
+                                        <option selected>circle</option>
+                                    </select>
+                                </div>
+                                <div class="grid">
+                                    <p>Grossura da Linha: <span id="grossuraSize">3</span></p>
+                                    <input type="range" id="grossuraLinha" name="grossuraLinha" min="0" value="3"
+                                        max="10" oninput="updateGrossura()">
+                                </div>
+                                <div class="grid">
+                                    <p>Suavização da Interpolação: <span id="suavidadeSize">20</span>%</p>
+                                    <input type="range" id="suavidade" name="suavidade" min="0" value="20" max="100"
+                                        oninput="updateSuavidade()">
+                                </div>
+                                <button onclick="ativaFloat()">Abrir menu do algoritmo</button>
+                            </div>
                         </div>
-                        <div id="myBoard" style="width: 400px"></div>
-                    </div>
-                    <div>
-                    </div>
-                    <script>
-                        var position = {
-                            d1: 'bQ',
-                            d2: 'bQ',
-                            d3: 'bQ',
-                            d4: 'bQ',
-                            d5: 'bQ',
-                            d6: 'bQ',
-                            d7: 'bQ',
-                            d8: 'bQ',
-                        };
+                        <div>
 
-                        var config = {
-                            draggable: true,
-                            dropOffBoard: 'snapback',
-                            position: position
-                        };
-
-                        var board = Chessboard('myBoard', config);
-
-                        function updatePosition(newPosition) {
-                            board.position(newPosition);
-                        }
+                            <br>
 
 
+                        </div>
+                    </article>
+                    <article style="display: none;" id="resultado" >
+                        <div class="grid">
+                            <div>
+                                <h3>Se passaram <span id="geracoesNecessarias">X</span> gerações</h3>
+                                <h4 id="solucaoOtima">O sistema não obteve uma solução ótima com os parametros
+                                    informados
+                                </h4>
+                                <p>Ao lado se encontra a solução encontrada pelo algoritmo</p>
+                                <p>Na div abaixo se encontram os gráficos: </p>
+                            </div>
+                            <div>
+                                <h1 id="melhorInd"></h1>
+                                <h1 id="fitMe"></h1>
+                            </div>
+                        </div>
+                        
+        
 
+                    </article>
+                    <article style="background-color: aliceblue;display: none;" id="grafico-container">
+                        <canvas id="myChart"></canvas>
+                    </article>
+                    <article>
 
-                    </script>
-                </article>
-                <article style="background-color: aliceblue;display: none;" id="grafico-container">
-                    <canvas id="myChart"></canvas>
-                </article>
-                <article>
-
-                </article>
+                    </article>
             </span>
 
         </div>
     </div>
-    <script>
-        var game = new Chess()
-        var position = {
-            a5: 'bQ',
-            b6: 'bQ',
-            c5: 'bQ',
-            d5: 'wQ',
-            e5: 'bQ',
-            f1: 'bQ',
-            g2: 'bQ',
-            h8: 'bQ',
 
-        };
-
-        var config = {
-            //draggable: true,
-            dropOffBoard: 'snapback', // this is the default
-            position: position
-        };
-        var b = null;
-
-        var whiteSquareGrey = '#a9a9a9'
-        var blackSquareGrey = '#696969'
-
-        var whiteSquareRed = '#ed0e2f'
-        var blackSquareRed = '#bf5e88'
-
-        function redSquare(square) {
-            var $square = $('#myBoard1 .square-' + square)
-
-            var background = whiteSquareRed
-            if ($square.hasClass('black-3c85d')) {
-                background = blackSquareRed
-            }
-
-            $square.css('background', background)
-        }
-
-        function greySquare(square) {
-            var $square = $('#myBoard1 .square-' + square)
-
-            var background = whiteSquareGrey
-            if ($square.hasClass('black-3c85d')) {
-                background = blackSquareGrey
-            }
-
-            $square.css('background', background)
-        }
-        var board1 = Chessboard('myBoard1', config);
-
-        function onMouseoverSquare(square, piece) {
-            // get list of possible moves for this square
-            var moves = game.moves({
-                square: square,
-                verbose: true
-            })
-
-            // exit if there are no moves available for this square
-            if (moves.length === 0) return
-
-            // highlight the square they moused over
-            greySquare(square)
-
-            // highlight the possible squares for this piece
-            for (var i = 0; i < moves.length; i++) {
-                greySquare(moves[i].to)
-            }
-        }
-
-        function diagonals(square) {
-            const fileLetters = 'abcdefgh';
-            const rankNumbers = '12345678';
-            const diagonals = [];
-
-            // Obter coordenadas da casa
-            const fileIndex = fileLetters.indexOf(square[0]);
-            const rankIndex = rankNumbers.indexOf(square[1]);
-
-            // Diagonal principal (ascendente)
-            for (let i = -Math.min(fileIndex, rankIndex); i < Math.min(8 - fileIndex, 8 - rankIndex); i++) {
-                if (i !== 0) {
-                    diagonals.push(fileLetters[fileIndex + i] + rankNumbers[rankIndex + i]);
-                }
-            }
-
-            // Diagonal secundária (descendente)
-            for (let i = -Math.min(7 - fileIndex, rankIndex); i < Math.min(fileIndex + 1, 8 - rankIndex); i++) {
-                if (i !== 0) {
-                    diagonals.push(fileLetters[fileIndex - i] + rankNumbers[rankIndex + i]);
-                }
-            }
-
-            return diagonals;
-        }
-        function getAllRelatedSquares(square) {
-            const fileLetters = 'abcdefgh';
-            const rankNumbers = '12345678';
-            const relatedSquares = [];
-
-            // Obter coordenadas da casa
-            const fileIndex = fileLetters.indexOf(square[0]);
-            const rankIndex = rankNumbers.indexOf(square[1]);
-
-            // Horizontal e vertical
-            for (let i = 0; i < 8; i++) {
-                if (i !== rankIndex) {
-                    relatedSquares.push(fileLetters[fileIndex] + rankNumbers[i]); // Vertical
-                }
-                if (i !== fileIndex) {
-                    relatedSquares.push(fileLetters[i] + rankNumbers[rankIndex]); // Horizontal
-                }
-            }
-
-            // Diagonal principal (ascendente)
-            for (let i = -Math.min(fileIndex, rankIndex); i < Math.min(8 - fileIndex, 8 - rankIndex); i++) {
-                if (i !== 0) {
-                    relatedSquares.push(fileLetters[fileIndex + i] + rankNumbers[rankIndex + i]);
-                }
-            }
-
-            // Diagonal secundária (descendente)
-            for (let i = -Math.min(7 - fileIndex, rankIndex); i < Math.min(fileIndex + 1, 8 - rankIndex); i++) {
-                if (i !== 0) {
-                    relatedSquares.push(fileLetters[fileIndex - i] + rankNumbers[rankIndex + i]);
-                }
-            }
-
-            return relatedSquares;
-        }
-        function redMarker(source) {
-            const diagonais = getAllRelatedSquares(source);
-
-            diagonais.forEach(diagonal => {
-                console.log(diagonal);
-                redSquare(diagonal);
-            });
-            console.log(diagonals(oldPos));
-            //greySquare("a1");
-        }
-        redMarker('d5');
-        /*
-        
-                function onDragMove(oldPos, newPos, source, piece, orientation) {
-                    const diagonais = diagonals(source);
-                    diagonais.forEach(diagonal => {
-                        console.log(diagonal);
-                        greySquare(diagonal);
-                    });
-                    console.log(diagonals(oldPos));
-                    //greySquare("a1");
-                }
-               */
-
-    </script>
     <br>
     <br>
     <br>
@@ -1580,16 +1417,89 @@ function mutate(mochila) {
             <button id="controlaTema" onclick="changeMode()">Mudar Cores</button>
         </div>
     </div>
+    <article class="cardCarrinho">
+        <h3>Conclusão</h3>
+        <div class="grid">
+            <div>
+                <p class="main">
+                <p>
+                    O algoritmo genético implementado mostrou-se suficiente na resolução do problema da
+                    mochila.
+                    Os resultados obtidos foram capazes de demonstrar a capacidade do algoritmo em encontrar
+                    soluções e a influência dos parametros de execução do algoritmo na busca pela
+                    resposta.<br>
+                </p>
+                <p></p>
+                O site didático desenvolvido para ensinar
+                algoritmos genéticos revelou-se aceitável na
+                explanação e compreensão do problema da mochila
+                e da aplicação dos algoritmos genéticos para sua resolução.
+
+                Os resultados obtidos demonstraram a capacidade do algoritmo de encontrar
+                soluções viáveis, além de evidenciar a influência dos parâmetros de
+                execução na busca pela resposta ótima.
+                <br>
+                </p>
+                <p>
+                    A interatividade proporcionada pelo site permite aos usuários
+                    experimentar diferentes configurações e observar diretamente
+                    os efeitos dessas alterações nos resultados obtidos,
+                    facilitando assim a compreensão dos conceitos dos algoritmos genéticos.
+                    <br>
+                </p>
+                <p>
+                    Dessa forma, o site constitui uma ferramenta decente para
+                    seres humanos interessados em aprender o básico
+                    sobre algoritmos genéticos e sua aplicação
+                    em problemas de otimização.
+
+                </p>
+
+
+
+
+
+                </p>
+            </div>
+        </div>
+    </article>
 
 
     <hr>
-    <footer>
-        <h3>Inserir informações aqui no Footer</h3>
-        <p>IFPR nenhum direito reservado</p>ARRUAMR REFERENCIAS
-        https://sites.icmc.usp.br/sandra/g6_t2/rainha.htm
-        <p>Email: ashusahusahusahuas@asuisahuhusa.com</p>
-        <p>Responsavel: Anonhimbu Anhuambi Asmsau</p>
-    </footer>
+
+
+    <article class="cardCarrinho">
+        <h3>Referências</h3>
+        <div class="grid">
+            <div>
+                <p class="main">
+                    Darwin, Charles. "Sobre a Origem das Espécies por meio da Seleção Natural: A Preservação de Raças
+                    Favorecidas na Luta pela Vida". Tradução do doutor Mesquita Paul. Porto: LELLO & IRMÃO – EDITORES,
+                    2003. Páginas 99 e 101.
+
+                </p>
+                <p class="main">
+                    Russell, Stuart J., e Norvig, Peter. "Inteligência Artificial: Uma Abordagem Moderna". 3ª edição,
+                    Pearson, 2010. pp. 126-129.
+                </p>
+                
+                <p class="main">
+                    Chu, P.C., & Beasley, J.E. (1998). "A Genetic Algorithm for the Multidimensional Knapsack Problem".
+                Journal of Heuristics, 4, 63-86.
+
+                </p>
+            </div>
+
+        </div>
+    </article>
+    <article>
+        <div class="container">
+            <h3>Contato</h3>
+            <p>IFPR Jacarezinho</p>
+            <p>Email: ronaldcontijofunciona@gmail.com</p>
+            <p>Responsavel: Ronald Contijo</p>
+        </div>
+    </article>
 </body>
 
 </html>
