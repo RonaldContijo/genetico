@@ -313,7 +313,7 @@
                 if (Math.random() < MUTATION_RATE) {
                     litleChild = mutate(litleChild);//uma criancinha
                     //alert("mutacao");
-                }
+                }                
                 newPopulation.push([litleChild, 0]);
 
             }
@@ -772,7 +772,7 @@
         <link rel="stylesheet" href="css/chessboard-1.0.0.css">
 
         <div id="carrinhos" class="container">
-            <h2>Desenvolvimento de um Site Didático para o Ensino de Algoritmos Genéticos
+            <h2>Desenvolvimento do Algoritmo para o Problema da Mochila
             </h2>
             <p>
                 Discente: Ronald José Contijo<br>
@@ -780,160 +780,385 @@
 
             </p>
             <span class="cardCarrinho">
-                <article class="grid">
-
+                <article>
+                    <h3>Algoritmo Genético Desenvolvido</h3>
+                    <div class="grid">
+                        <div>
+                            <h4>A anatomia do Indivíduo</h4>
+                            <p class="main">
+                                Nessa implementação, o indivíduo é representado por um vetor binário que descreve quais
+                                itens estão ou não na mochila, conforme descrito por Chu, P.C., & Beasley, J.E. (1998).
+                                Cada posição do vetor representa um item, e o valor binário nessa posição indica se o
+                                item está presente (1) ou ausente (0) na mochila.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <p class="main">
+                                Por exemplo, suponha que tenhamos 10 itens para escolher, representados por um vetor
+                                binário de 10 elementos:
+                                <strong>[1,0,1,0,1,0,1,0,1,0]</strong>
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+var peso_itens = [2, 20, 9, 5, 2, 2, 2, 1, 15, 8];
+var valor_itens = [10, 1, 9, 1, 3, 3, 3, 5, 15, 5];
+var nome_itens = [
+    'bola', //1
+    'tijolo', //2
+    'gato', //3
+    'pedra', //4
+    'banana', //5
+    'maça', //6
+    'uva', //7
+    'calanguinho', //8
+    'ouro', //9
+    'jaca'//10
+];
+var individuo = [1,0,1,0,1,0,1,0,1,0];
+            </code></pre>
+                        </div>
+                    </div>
+                    <p class="main">
+                        Neste caso, os itens nas posições 1, 3, 5, 7 e 9 estão presentes na mochila, enquanto os itens
+                        nas posições 2, 4, 6 e 8 estão ausentes.
+                    </p>
+                    <div class="grid">
+                        <div>
+                            <h4>Geração da População Inicial</h4>
+                            <p class="main">
+                                Foi desenvolvida a função geraMochilaAleatoria para gerar um indivíduo. Ela retorna um
+                                vetor com comprimento definido pela constante <strong>NUMERO_ITENS</strong> contendo 0s
+                                e 1s. Para gerar a população inicial, a função geraMochilaAleatoria é chamada o número
+                                de vezes equivalente ao tamanho da população, definido por
+                                <strong>POPULATION_SIZE</strong>.
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+function geraMochilaAleatoria() {
+    // Math.random gera um número aleatório entre 0 e 1
+    const mochila = Array.from(
+        { length: NUMERO_ITENS }, 
+        () => Math.floor(Math.random() * 2)
+    );
+    return mochila;  
+}
+let population = Array.from(
+    { length: POPULATION_SIZE }, 
+    () => [geraMochilaAleatoria(), 0]
+);
+            </code></pre>
+                        </div>
+                    </div>
                     <div>
-                        <h3>Introdução</h3>
-                        <p class="main">
-                            Os algoritmos genéticos (AGs) são uma classe de métodos de otimização e busca inspirados no
-                            processo natural de evolução descrito por Charles Darwin. Nos AGs, soluções para o problema
-                            em questão são representadas como <strong>indivíduos</strong>, os quais são submetidos a
-                            operadores de <strong>seleção</strong>, <strong>cruzamento</strong> e
-                            <strong>mutação</strong> para gerar as melhores características evolutivas. Da mesma forma
-                            como ocorre na natureza, existe um método de <strong>avaliação</strong> dessa
-                            <strong>população</strong> (grupo de indivíduos), e os mais adaptados (aqueles mais próximos
-                            de uma boa solução) possuem mais chances de se reproduzir adequadamente e passar seus
-                            <strong>genes</strong> (suas partes de solução) adiante.
-                        </p>
+                    <div class="grid">
+                        <div>
+                            <h4>Cálculo da Aptidão</h4>
+                            <p class="main">
+                                A função fitness desenvolvida examina uma mochila e calcula sua aptidão com base no peso
+                                e no valor total dos itens contidos nela. Primeiramente, é percorrido o vetor binário
+                                para determinar o peso e o valor acumulados dos itens presentes. Se o peso total excede
+                                o limite permitido, a aptidão é penalizada, dividindo seu valor por 100, como
+                                demonstrado na equação abaixo. Isso incentiva a busca por soluções com peso próximo ao limite
+                                máximo. Caso contrário, a aptidão é simplesmente o valor total dos itens presentes na
+                                mochila. </p>
+                        </div>
 
-                        <p class="main">
-                            Um problema clássico abordado pelos Algoritmos Genéticos (AGs) é o problema das Damas, que
-                            consiste em posicionar um número de damas em um tabuleiro de xadrez de tal forma que nenhuma
-                            delas possa atacar outra. Este é um problema conhecido por ser um desafio combinatório e
-                            pode ser resolvido eficientemente por AGs, devido à sua natureza exploratória e à capacidade
-                            de encontrar soluções próximas do ótimo global.
+                        <div>
+                            <pre><code class="javascript">
+function calculateFitness(mochila) {
+    let pesoTotal = 0;
+    let valorTotal = 0;
+    for (let i = 0; i < mochila.length; i++) { 
+        if (mochila[i] === 1) { 
+            pesoTotal += peso_itens[i]; 
+            valorTotal += valor_itens[i]; 
+        } 
+    } 
+    if (pesoTotal > MAX_WEIGHT) {
+        return valorTotal * 0.1;
+    }
+    return valorTotal;
+}
+            </code></pre>
+                        </div>
+                    </div>
+                    <img src="equa.JPG">
+                    </div>
+                    <br>
+                    <div class="grid">
+                        <div>
+                            <h4>Métodos de seleção</h4>
+                            <p class="main">
+                                Para selecionar os indivíduos para o cruzamento, foram desenvolvidas duas funções. A
+                                função tournamentSelection realiza uma competição entre um número fixo de indivíduos
+                                (definido pelo tamanho do torneio) selecionados aleatoriamente da população. Cada
+                                indivíduo é avaliado com base em sua aptidão, e o vencedor do torneio é o que possui a
+                                maior aptidão. A função rouletteWheelSelection utiliza uma roleta ponderada para
+                                selecionar os indivíduos com base em sua aptidão relativa. Cada indivíduo tem uma fatia
+                                da roleta proporcional à sua aptidão, e um valor aleatório é gerado. O indivíduo cuja
+                                fatia inclui o valor gerado é selecionado. Ambas as funções buscam garantir que os
+                                indivíduos mais bem adaptados ao ambiente tenham maior probabilidade de serem
+                                selecionados, favorecendo a evolução da população ao longo das gerações.
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+function tournamentSelection(population) {
+    const tournamentSize = 5;
+    const tournament = [];
+    // Seleção de 5 indivíduos aleatórios para o torneio
+    for (let i = 0; i < tournamentSize; i++) {
+        tournament.push(population[Math.floor(Math.random() * population.length)]);
+    }
+    // Retorna o melhor deles
+    return tournament.reduce(
+        (max, current) => (current[1] > max[1] ? current : max)
+    );
+}
+function rouletteWheelSelection(population) {
+    const totalFitness = population.reduce(
+        (total, individual) => total + individual[1], 0
+    );
+    const randomValue = Math.random() * totalFitness;
+    let currentSum = 0;
+    for (const individual of population) {
+        currentSum += individual[1];
+        if (currentSum >= randomValue) {
+            return individual;
+        }
+    }
+}
+            </code></pre>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <h4>Método de Cruzamento</h4>
+                            <p class="main">
+                                A função crossover implementa um método de cruzamento entre dois indivíduos, representados por arrays denominados progenitor1 e progenitor2. Primeiro, ela seleciona aleatoriamente um ponto de troca entre os indivíduos (que é maior que zero e menor que o número máximo de itens na mochila, para impedir a duplicação de indivíduos). Em seguida, cria um novo indivíduo combinando as partes dos pais antes e depois desse ponto de troca, produzindo um descendente. No ciclo de execução ela é chamada duas vezes, para que cada casal de progenitores gere 2 novos indivíduos e não haja perda de material genético.
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+function crossover(parent1, parent2) {
+    //selecionar qual o ponto de troca
+    const sexoPoint = Math.floor(
+        Math.random() * (NUMERO_ITENS - 1)
+    ) + 1;
+    const litleChild = [
+        ...parent1.slice(0, sexoPoint),
+        ...parent2.slice(sexoPoint)
+    ];
+    //retorna um novo individuo
+    return litleChild;
+}
+
+
+
+
+            </code></pre>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div>
+                            <h4>Método de Mutação</h4>
+                            <p class="main">
+                                A função mutate é responsável pela mutação de um cromossomo, representado pela mochila,
+                                em um algoritmo genético. A mutação é um processo para introduzir diversidade e evitar a
+                                convergência prematura para soluções não tão boas quanto a melhor das soluções. Nessa
+                                função, são gerados dois números aleatórios (pos1 e pos2) que representam as posições
+                                dos genes na mochila. Em seguida, os genes nas posições pos1 e pos2 são trocados entre
+                                si. Caso a mutação seja benéfica, o indivíduo terá mais chances de se reproduzir e
+                                passar adiante seus genes.
+                            </p>
+                        </div>
+                        <div>
+                            <pre><code class="javascript">
+function mutate(mochila) {
+    // Gera 2 números aleatórios e realiza a troca de posição dos elementos
+    const [pos1, pos2] = [
+        Math.floor(Math.random() * NUMERO_ITENS),
+        Math.floor(Math.random() * NUMERO_ITENS)
+    ];
+    [mochila[pos1], mochila[pos2]] = [
+        mochila[pos2], 
+        mochila[pos1]
+    ];
+    return mochila;
+}
+            </code></pre>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="cardCarrinho">
+                    <h3>Resultados</h3>
+                    <div class="grid">
+                        <div>
+                            <p class="main">
+                                Os resultados obtidos com a aplicação do algoritmo genético para resolver o problema da
+                                mochila demonstram sua eficácia e pertinência nesse cenário específico de otimização. A
+                                análise dos resultados revelou que o algoritmo foi capaz de encontrar soluções próximas
+                                do ótimo em diversas instâncias do problema, evidenciando sua capacidade de explorar de
+                                maneira eficiente o espaço de busca disponível.
+                            </p>
+                            <p class="main">
+                                Além disso, a adaptabilidade do algoritmo a diferentes configurações do problema, como
+                                variações no número de itens e capacidade da mochila, não o impediu de alcançar seu
+                                objetivo. 
+                                Os experimentos apontaram para uma tendência de convergência do algoritmo para soluções
+                                decentes com o aumento do número de gerações, indicando sua capacidade de encontrar
+                                soluções ótimas ou próximas do ótimo.
+                            </p>
+                        </div>
+                    </div>
+                </article>
+
+
+
+
+
+
+                <article>
+                    <div>
+                        <h3>Opções para o geração de itens aleatórios</h3>
+                        <div class="">
+                            <div class="grid">
+                                <p>Número de Itens: <span id="numItensSize">10</span></p>
+                                <input type="range" id="numItens" name="numItens" min="0" value="10" max="500"
+                                    oninput="updateNumItens()">
+                            </div>
+                            <div class="grid">
+                                <p>Valor Máimo por Item: <span id="valorMaimoSize">20</span></p>
+                                <input type="range" id="valorMaimo" name="valorMaimo" min="0" value="20" max="100"
+                                    oninput="updateValorMaimo()">
+                            </div>
+                            <div class="grid">
+                                <p>Peso Máimo por Item: <span id="pesoMaimoSize">20</span></p>
+                                <input type="range" id="pesoMaimo" name="pesoMaimo" min="0" value="20" max="100"
+                                    oninput="updatePesoMaimo()">
+                            </div>
+                            <button onclick="geraItens()">Gerar Itens aleatórios</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Lista de Itens Atual</h3>
+                        <table id="tabelaItens">
+                            <!-- A tabela será gerada aqui pelo JavaScript -->
+                        </table>
+                    </div>
+                </article>
+
+                <article>
+
+                    <div id="floating">
+                        <h3>Menu de Execução Genético</h3>
+                        <p>Por favor informe os parametros de execução do algortimo!
                         </p>
-                        <p class="main">
-                            Outro problema comumente tratado pelos AGs é o problema da mochila e dos pesos, que envolve maximizar o
-                            valor dos itens que podem ser alocados em um dispositivo para carga de itens, respeitando um peso limite imposto ao dispositivo. Esse problema também é de natureza combinatória e pode ser resolvido de forma
-                            eficiente pelos AGs, pois eles são capazes de explorar o espaço de solução em busca de
-                            soluções próximas do ótimo.
-                        </p>
-                        <p class="main">
-                            Nesse ínterim, o presente trabalho tem como finalidade desenvolver uma página WEB com HTML
-                            (<i>HyperText Markup Language</i>), CSS (<i>Cascading Style Sheets</i>) e JavaScript para
-                            demonstrar o desenvolvimento de implementações de AGs para a resolução dos problemas das
-                            Damas e da mochila. Além disso, pretende-se criar funções que permitam que o usuário
-                            modifique parâmetros de execução dos algoritmos para verificar seus efeitos na resolução dos
-                            problemas e gerar gráficos informativos sobre os indivíduos no decorrer das iterações dos
-                            algoritmos.
-                        </p>
-                        <p class="main">
-                            Esta pesquisa está dividida na conformação que se apresenta: (i) na Fundamentação Teórica
-                            são apresentadas as premissas encontradas na literatura que fundamentam a existência dos
-                            Algoritmos Genéticos; (ii) na seção Metodologia encontram-se as etapas da concepção dos
-                            algoritmos; (iii) em
-                            Resultados e Discussões é exposto o protótipo desenvolvido na pesquisa; (iv) as derradeiras
-                            reflexões estão presentes na seção de Considerações Finais.
-                        </p>
+                        <hr>
+                        <div class="grid">
+                            <p>Tamanho da População: <span id="populationSize">26</span></p>
+                            <input type="range" id="tamanhoPopu" value="26" name="tamanhoPopu" step="2" min="0"
+                                max="500" oninput="updatePopulationSize()">
+                        </div>
+                        <div class="grid">
+                            <p>Chance de Mutação: <span id="mutacaoSize">10</span>%</p>
+                            <input type="range" id="mutacao" name="mutacao" value="10" min="0" max="100"
+                                oninput="uptadeMutacao()">
+                        </div>
+                        <div class="grid">
+                            <p>Valor maximo de peso: <span id="pesoMaimoMochilaSize">20</span></p>
+                            <input type="range" id="pesoMaimoMochila" name="pesoMaimoMochila" value="20" min="0"
+                                max="1000" oninput="updatePesoMaimoMochila()">
+                        </div>
+
+                        <div class="grid">
+                            <p>Numero máximo de Gerações: <span id="geracoesSize">10</span></p>
+                            <input type="range" id="geracoes" name="geracoes" min="0" value="10" max="5000"
+                                oninput="updateGeracao()">
+                        </div>
+                        <div class="grid">
+                            <p>Operador de Seleção</p>
+                            <select id="metodoSelecao" aria-label="Selecione o método..." required>
+
+                                <option>Roleta</option>
+                                <option selected>Torneio</option>
+                            </select>
+                        </div>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" id="elitismo" name="sd" checked />
+                                Elitismo
+                            </label>
+
+                        </fieldset>
+                        <div class="grid">
+                            <button onclick="start()">Iniciar Algoritmo</button>
+                            <button onclick="fechaMenu()">Fechar Menu</button>
+                        </div>
+
+                    </div>
+                    <div>
+                        <h3>Opções para o gráfico</h3>
+                        <div class="">
+                            <div class="grid">
+                                <p>Figura do Gráfico</p>
+                                <select onchange="updateFigura()" id="figura" aria-label="Selecione..." required>
+                                    <option>false</option>
+                                    <option>triangle</option>
+                                    <option>rect</option>
+                                    <option selected>circle</option>
+                                </select>
+                            </div>
+                            <div class="grid">
+                                <p>Grossura da Linha: <span id="grossuraSize">3</span></p>
+                                <input type="range" id="grossuraLinha" name="grossuraLinha" min="0" value="3" max="10"
+                                    oninput="updateGrossura()">
+                            </div>
+                            <div class="grid">
+                                <p>Suavização da Interpolação: <span id="suavidadeSize">20</span>%</p>
+                                <input type="range" id="suavidade" name="suavidade" min="0" value="20" max="100"
+                                    oninput="updateSuavidade()">
+                            </div>
+                            <button onclick="ativaFloat()">Abrir menu do algoritmo</button>
+                        </div>
+                    </div>
+                    <div>
+
                         <br>
-                    </div>
 
+
+                    </div>
+                </article>
+                <article style="display: none;" id="resultado">
+                    <div class="grid">
+                        <div>
+                            <h3>Se passaram <span id="geracoesNecessarias">X</span> gerações</h3>
+                            <h4 id="solucaoOtima">O sistema não obteve uma solução ótima com os parametros
+                                informados
+                            </h4>
+                            <p>Ao lado se encontra a solução encontrada pelo algoritmo</p>
+                            <p>Na div abaixo se encontram os gráficos: </p>
+                        </div>
+                        <div>
+                            <h1 id="melhorInd"></h1>
+                            <h1 id="fitMe"></h1>
+                        </div>
+                    </div>
 
 
 
                 </article>
-                <article class="grid">
-                    <div>
-                        <h3>Fundamentação Teórica</h3>
-                        <p class="main">
-                            Charles Darwin, através de seus estudos da origem das espécies e de seu famoso livro "Sobre
-                            a Origem das Espécies por meio da Seleção Natural: A Preservação de Raças Favorecidas na
-                            Luta pela Vida", estabeleceu os princípios fundamentais da seleção natural, que serviram de
-                            base para o desenvolvimento dos Algoritmos Genéticos. A principal ideia que fundamenta os
-                            GAs é descrita por Darwin, C. (2003, p. 101).
-                            <br><br><small><i>...que os indivíduos mais aptos, entre os que sobrevivem, supondo que se
-                                    produzem neles variações numa direção proveitosa, tendem a multiplicar-se em maior
-                                    número que os indivíduos menos aptos.</i></small><br><br>
-                            Essa citação encapsula o princípio central desses algoritmos: a seleção natural. No contexto
-                            dos GAs, os "indivíduos mais aptos" se referem às soluções mais eficazes para um determinado
-                            problema, representadas por indivíduos em uma população de soluções candidatas. A ideia é
-                            que, ao longo das gerações, as soluções mais bem-sucedidas (mais aptas) têm maior
-                            probabilidade de sobreviver e se reproduzir, contribuindo para a evolução da população em
-                            direção a soluções melhores.
-                        </p>
-                    </div>
-                    <p>
-                        <img src="darwin.jpg">
-                        <sub class="aaa"> Darwin. English Heritage/Heritage Images/Getty Images </sub>
-                    </p>
+                <article style="background-color: aliceblue;display: none;" id="grafico-container">
+                    <canvas id="myChart"></canvas>
                 </article>
+                <article>
 
-                <article class="grid">
-                    <div>
-                        <p>
-                            <img class="fotDiag" src="Capturar.JPG">
-                            <sub class="aaa"><br> Fonte: João Paulo </sub>
-                        </p>
-                    </div>
-                    <div>
-                        <p class="main">
-                            Russell e Norvig, em seu livro "Inteligência Artificial: Uma Abordagem Moderna" (2010, pg.
-                            126-129), descrevem as etapas típicas de um algoritmo genético da seguinte maneira:
-                        </p>
-                        <ol class="main">
-                            <li><strong>Inicialização da População:</strong> Uma população inicial de soluções
-                                candidatas é gerada aleatoriamente ou de acordo com algum critério específico
-                                relacionado ao problema.</li>
-                            <li><strong>Avaliação da Aptidão (Fitness):</strong> Cada solução na população é avaliada
-                                quanto à sua aptidão para resolver o problema. Isso geralmente envolve a atribuição de
-                                uma pontuação ou valor de aptidão com base em quão bem a solução atende aos critérios
-                                estabelecidos.</li>
-                            <li><strong>Seleção:</strong> Indivíduos mais aptos na população são selecionados para
-                                reprodução com base em sua aptidão. Essa seleção pode ser realizada de várias maneiras,
-                                como seleção por torneio ou roleta.</li>
-                            <li><strong>Reprodução:</strong> Os indivíduos selecionados são combinados (cruzamento ou
-                                crossover) para produzir descendentes que herdam características de seus progenitores.
-                            </li>
-                            <li><strong>Mutação:</strong> Como Darwin escreveu em "A Origem das Espécies" (2003, p. 99),
-                                <small><i>"...quando uma parte varia e a seleção natural acumula as variações, se
-                                        originam, por vezes, outras modificações de natureza mais
-                                        inesperada."</i></small> A importância da mutação em algoritmos genéticos está
-                                relacionada à introdução de variabilidade na população de soluções candidatas. Assim
-                                como na natureza, onde a variação genética é boa para a evolução das espécies, a mutação
-                                em algoritmos genéticos permite explorar novas regiões do espaço de busca. Sem a
-                                mutação, a população poderia ficar presa, limitando a capacidade do algoritmo genético
-                                de encontrar soluções decentes para o problema em questão.
-                            </li>
-                            <li><strong>Atualização da População:</strong> Os descendentes gerados substituem ou se
-                                juntam à população existente.</li>
-                            <li><strong>Critério de Parada:</strong> O processo é repetido por várias gerações ou até
-                                que um critério de parada seja atingido. Isso pode ser um número máximo de gerações ou
-                                uma quando a <strong>solução ótima</strong> (a melhor solução) encontrada.</li>
-                        </ol>
-                    </div>
                 </article>
-
-
-
-                <article class="grid">
-                    <div>
-                        <h3>Metodologia</h3>
-                        <p class="main">
-                            HTML, CSS e JavaScript são três tecnologias usadas para o desenvolvimento web moderno. O
-                            HTML é a linguagem padrão para a criação e estruturação de páginas web, definindo a
-                            estrutura do conteúdo por meio de elementos como cabeçalhos, parágrafos, imagens e links.
-                            CSS, Folhas de Estilo em Cascata, é utilizado para dar beleza aos elementos HTML,
-                            controlando aspectos artísticos como cores, fontes, layout e animações, permitindo uma
-                            apresentação visual bela, elegante e atraente em dispositivos de telas de tamanhos variados.
-                            JavaScript é uma linguagem de programação de alto nível que permite adicionar interatividade
-                            e dinamismo às páginas web, possibilitando a criação de funcionalidades como formulários
-                            interativos, animações e manipulação do DOM (Document Object Model). Essas três tecnologias
-                            trabalham em conjunto para criar esta página. HTML define os elementos, CSS estiliza e
-                            JavaScript executa o algoritmo genético desenvolvido, além de fornecer interatividade ao
-                            site.
-                        </p>
-                    </div>
-                    <p>
-                        <br><br><br>
-                        <img src="html.webp">
-                        <sub class="aaa"> Fonte:
-                            https://www.dio.me/articles/a-jornada-no-mercado-de-trabalho-com-html-css-e-javascript
-                        </sub>
-                    </p>
-                </article>
-
-
             </span>
 
         </div>
@@ -944,61 +1169,56 @@
     <br>
     <!-- Eu não tenho orgulho desses <br>...-->
     <div class="container">
-        <h3>Ao clicar em um dos botões abaixo você será redirecionado(a) para a página interativa dos algoritmos: </h3>
         <div class="grid">
-            <a href="./damas.html" role="button">Problema das Damas</a>
-            <a href="./mochila.html" role="button">Problema da Mochila</a>
+            <button id="controlaTema" onclick="changeMode()">Mudar Cores</button>
         </div>
     </div>
+    <article class="cardCarrinho">
+        <h3>Conclusão</h3>
+        <div class="grid">
+            <div>
+                <p class="main">
+                <p>
+                    O algoritmo genético implementado mostrou-se suficiente na resolução do problema da
+                    mochila.
+                    Os resultados obtidos foram capazes de demonstrar a capacidade do algoritmo em encontrar
+                    soluções e a influência dos parametros de execução do algoritmo na busca pela
+                    resposta.<br>
+                </p>
+                <p></p>
+                O site didático desenvolvido para ensinar
+                algoritmos genéticos revelou-se aceitável na
+                explanação e compreensão do problema da mochila
+                e da aplicação dos algoritmos genéticos para sua resolução.
 
-    <div id="carrinhos" class="container">
-        <article class="cardCarrinho">
-            <h3>Conclusão</h3>
-            <div class="grid">
-                <div>
-                    <p class="main">
-                    <p>
-                        O algoritmo genético implementado mostrou-se suficiente na resolução do problema da
-                        mochila.
-                        Os resultados obtidos foram capazes de demonstrar a capacidade do algoritmo em encontrar
-                        soluções e a influência dos parametros de execução do algoritmo na busca pela
-                        resposta.<br>
-                    </p>
-                    <p></p>
-                    O site didático desenvolvido para ensinar
-                    algoritmos genéticos revelou-se aceitável na
-                    explanação e compreensão do problema da mochila
-                    e da aplicação dos algoritmos genéticos para sua resolução.
-
-                    Os resultados obtidos demonstraram a capacidade do algoritmo de encontrar
-                    soluções viáveis, além de evidenciar a influência dos parâmetros de
-                    execução na busca pela resposta ótima.
+                Os resultados obtidos demonstraram a capacidade do algoritmo de encontrar
+                soluções viáveis, além de evidenciar a influência dos parâmetros de
+                execução na busca pela resposta ótima.
+                <br>
+                </p>
+                <p>
+                    A interatividade proporcionada pelo site permite aos usuários
+                    experimentar diferentes configurações e observar diretamente
+                    os efeitos dessas alterações nos resultados obtidos,
+                    facilitando assim a compreensão dos conceitos dos algoritmos genéticos.
                     <br>
-                    </p>
-                    <p>
-                        A interatividade proporcionada pelo site permite aos usuários
-                        experimentar diferentes configurações e observar diretamente
-                        os efeitos dessas alterações nos resultados obtidos,
-                        facilitando assim a compreensão dos conceitos dos algoritmos genéticos.
-                        <br>
-                    </p>
-                    <p>
-                        Dessa forma, o site constitui uma ferramenta decente para
-                        seres humanos interessados em aprender o básico
-                        sobre algoritmos genéticos e sua aplicação
-                        em problemas de otimização.
+                </p>
+                <p>
+                    Dessa forma, o site constitui uma ferramenta decente para
+                    seres humanos interessados em aprender o básico
+                    sobre algoritmos genéticos e sua aplicação
+                    em problemas de otimização.
 
-                    </p>
+                </p>
 
 
 
 
 
-                    </p>
-                </div>
+                </p>
             </div>
-        </article>
-    </div>
+        </div>
+    </article>
 
 
     <hr>
@@ -1028,7 +1248,6 @@
 
         </div>
     </article>
-
     <article>
         <div class="container">
             <h3>Contato</h3>
@@ -1037,7 +1256,6 @@
             <p>Responsavel: Ronald Contijo</p>
         </div>
     </article>
-
 </body>
 
 </html>
@@ -1045,5 +1263,95 @@
 
     changeTheme();
     changeMode();
+
+</script>
+
+<div id="toggleFloating" onclick="ativaFloat()">Abrir Menu do Algoritmo</div>
+
+<style>
+    #toggleFloating {
+        position: fixed;
+        bottom: 20px;
+        /* Adjust as needed */
+        right: 20px;
+        background-color: #9b42f4;
+        color: #fff;
+        /* Adjust as needed */
+        padding: 10px 20px;
+        border-radius: 5%;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.4s;
+    }
+
+    #floating {
+        display: none;
+        position: fixed;
+        top: 0px;
+        /* Adjust as needed */
+        right: 0px;
+        /* Adjust as needed */
+        background-color: #444444;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 2%;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        transform: scale(0.95);
+    }
+
+    #floating:hover {
+        transform: scale(1.0);
+    }
+</style>
+<script>
+    function fechaMenu() {
+        let floatingElement = document.getElementById("floating");
+        let botaoPara = document.getElementById("toggleFloating");
+        console.log("Hum");
+        floatingElement.style.display = "none";
+        botaoPara.style.display = "block";
+    }
+    function ativaFloat() {
+        let floatingElement = document.getElementById("floating");
+        let botaoPara = document.getElementById("toggleFloating");
+
+        console.log("Hum");
+        floatingElement.style.display = "block";
+        botaoPara.style.display = "none";
+    }
+
+    function mostrarItensNaTabela() {
+        // Obtendo uma referência ao elemento da tabela onde os itens serão exibidos
+        var tabela = document.getElementById("tabelaItens");
+
+        // Limpando qualquer conteúdo anterior da tabela
+        tabela.innerHTML = "";
+
+        // Criando o cabeçalho da tabela
+        var cabecalho = tabela.createTHead();
+        var linhaCabecalho = cabecalho.insertRow();
+        var celulaNome = linhaCabecalho.insertCell();
+        var celulaPeso = linhaCabecalho.insertCell();
+        var celulaValor = linhaCabecalho.insertCell();
+        celulaNome.textContent = "Nome";
+        celulaPeso.textContent = "Peso";
+        celulaValor.textContent = "Valor";
+
+        // Adicionando os itens à tabela
+        for (var i = 0; i < nome_itens.length; i++) {
+            var linha = tabela.insertRow();
+            var celulaNomeItem = linha.insertCell();
+            var celulaPesoItem = linha.insertCell();
+            var celulaValorItem = linha.insertCell();
+            celulaNomeItem.textContent = nome_itens[i];
+            celulaPesoItem.textContent = peso_itens[i];
+            celulaValorItem.textContent = valor_itens[i];
+        }
+    }
+
+    // Chamar a função para exibir os itens na tabela quando necessário
+    mostrarItensNaTabela();
 
 </script>

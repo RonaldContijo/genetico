@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+
+<link rel="stylesheet" href="./highlight/styles/tokyo-night-dark.css">
+<script src="./highlight/highlight.js"></script>
+
+<script>hljs.highlightAll();</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    var melhoresIndividuo = [];
+    var pioresIndividuo = [];
+    var mediaIndividuos = [];
+    var numeroGeracoes = 0;
+    var melhorIndividuoResposta = null;
+
+    var pointStyleD = 'circle';
+    var grossuraLinha = 3;
+    var suavidadeInterpolacao = 0.2;
+
+
+    function criarLista(numero) {
+        var lista = [];
+        for (var i = 1; i <= numero; i++) {
+            lista.push(i);
+        }
+        return lista;
+    }
+
+    function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERATIONS, SELECTION_METHOD, ELITISMO) {
+        //se vier thrue no selection_method então é pra executar o torneio, se false a roleta
+
+        // Funbção para gerar um tabuleiro aleatório
+        function geraTabuleiroAleatorio() {
+            //Math.random gera um n[umero aleatório entre 0 e 1]
+            const tabuleiro = Array.from({ length: 8 }, () => Math.floor(Math.random() * 8));
+            return tabuleiro;
+        }
+        //função de cruzamento
+        function sexo(parent1, parent2) {
+            //selecionar qual o ponto de troca
+            const sexoPoint = Math.floor(Math.random() * 7) + 1;
+            const litleChild = [...parent1.slice(0, sexoPoint), ...parent2.slice(sexoPoint)];
+            //retorna um novo individuo
+            return litleChild;
+        }
+
+        // função de mutação
+        function mutate(situacaoDoTabuleiro) {
+            //gera 2 numeros aleatórios e realiza a troca de posição do que tem dentro de um com
+            //o que ta no outro.
+            //Talvez possa gerar um novo valor aleatório ao invés de trocar 2 posições...
+            //lembro que o joão paulo disse isso
+            const [pos1, pos2] = [Math.floor(Math.random() * 8), Math.floor(Math.random() * 8)];
+            [situacaoDoTabuleiro[pos1], situacaoDoTabuleiro[pos2]] = [situacaoDoTabuleiro[pos2], situacaoDoTabuleiro[pos1]];
+            return situacaoDoTabuleiro;
+        }
+
+        // função fitness do algoritmo
+        //ele verifica quantos pares de damas estão se atacando
+        function calculateFitness(boardState) {
+            let conflicts = 0;
+            //console.log(boardState);//AAAAAAAAAAAAAAAAAAAAAAAAA
+
+            for (let i = 0; i < 8; i++) {
+                for (let j = i + 1; j < 8; j++) {
+
+                    if (boardState[i] === boardState[j] || Math.abs(boardState[i] - boardState[j]) === j - i) {
+                        conflicts += 1;
+                    }
+
+                }
+            }
+            //alert(`${boardState} --- ${28 - conflicts}`);
+            return 28 - conflicts; // 28 é o máximo possivel
+            //o retorno é o número máximo POSSIVEL de conflitos de pares de damas menos o valor desse estado
+            //achei confuso então tive q contar
+            //7+6+5+4+3+2+1
+            //se todas as damas estiverem enfileiradas a primeira tem 7 conflitos
+            //a segunda tem 7-DamaAnterior = 6
+            //a terceira tem 6-DamaAnterior*2 = 5
+            //4
+            //e assim por diante
+        }
+
+
+
+
+        // seleciona os pais para o cruzamento com o método de torneio
+        function tournamentSelection(population) {
+            const tournamentSize = 5;
+            const tournament = [];
+
+            //seleciona 5 individuos aleatoriamente
+            for (let i = 0; i < tournamentSize; i++) {
+                tournament.push(population[Math.floor(Math.random() * population.length)]);
+            }
+
+            //retorna o melhor individuo dos 5 selecionados no torneio
+            //ele vai se reproduzir 
+            //console.log(`Tronament ${tournament.reduce((max, current) => (current[1] > max[1] ? current : max))}`);
+            return tournament.reduce((max, current) => (current[1] > max[1] ? current : max));
+        }
+
+        //seleciona os individuos para cruzamento pelo metodo da roleta
+        function rouletteWheelSelection(population) {
+            // soma todas as aptidões da população
+            const totalFitness = population.reduce((total, individual) => total + individual[1], 0);
+
+            // gera um número entre 0 e a soma total de aptidões
+            //esse número que vai o divisor
+            //math.random gera numero de 0 a 1 ão esquecer
+            //achei q era polimorfisada, mas ela é assim mesmo por incrivel que pareça
+            const randomValue = Math.random() * totalFitness;
+            let currentSum = 0;
+
+            /*
+            Acho mais elegante assim do que só percentagem, apesar de ser percentagem
+            É como se fosse uma pizza
+            */
+            // percorre toda a população até achar o primeiro que a soma passa o valor aleatório
+            for (const individual of population) {
+                currentSum += individual[1];
+                if (currentSum >= randomValue) {
+                    //retorna o carinha
+                    return individual;
+                }
+            }
+        }
+
+
+        // cria a população inicial
+        let population = Array.from({ length: POPULATION_SIZE }, () => [geraTabuleiroAleatorio(), 0]);
+        //console.log(population);
+
+
+        // Loop do algoritmo genético, depois transformar em função
+        let generation = 1
+        for (generation; generation < MAX_GENERATIONS; generation++) {
+            //Calcula a apstidão de toda a população em todo inicio do loop
+            //é o terceiro bloquinho do diagrama do jaõ paulo
+            //adiciona a lista um novo elemento, que é a aaptidão
+            //a lita vai ficar com essa cara
+            //[([0,2,3,4,5,6,7,8],20)]
+            //o vetorzinho de 8 elementos são as damas e o inteiro da tupla 
+            //CADA INDIVIDUO É UMA TUPLA
+            //A PRIMEIRA PARTE TEM A POSIÇÃO E A SEGUNDA TEM A APTIDÃO
+            population = population.map(([boardState]) => [boardState, calculateFitness(boardState)]);
+
+            //separa a aptidão pra ficar mais fácil de manipular
+            //teria como sem separar, mas é dificil
+            let fitness = population.map(function (item) {
+                return item[1];
+            });
+
+            // eExibir a nova lista na console
+            //console.log(fitness);
+
+            //informaçoes
+            console.log("=========================================");
+            console.log(`estamos na ${generation} geração`);
+            console.log(`O melhor individuo tem ${Math.max(...fitness)}`);
+            console.log(`O pior individuo tem ${Math.min(...fitness)}`);
+            const meanFitness = population.reduce((total, [, fitness]) => total + fitness, 0) / POPULATION_SIZE;
+            console.log(`A média dos individuos é ${meanFitness}`);
+
+            //armazendando infos pra msotrar no grafico
+            melhoresIndividuo.push(Math.max(...fitness));
+            pioresIndividuo.push(Math.min(...fitness));
+            mediaIndividuos.push(meanFitness);
+            numeroGeracoes = generation;
+
+
+            var bestBoardState = Math.max(...fitness);
+            let maxIndex = fitness.indexOf(bestBoardState);
+            melhorIndividuoResposta = population[maxIndex];
+            //se existe algum individuo onde não há nenhum par de rainhas se atacando
+            //(lembrar q esse 28 é lá de cima do máximo número de ruindade possivel)
+            if (bestBoardState === 28) {
+                console.log("A SOLUÇÃO FOI ENCONTRADA NA GERAÇÃO", generation);
+                console.log("Beast solution:", population[maxIndex]);
+                melhorIndividuoResposta = population[maxIndex];
+                break;
+            }
+
+            //cria a nova população, os filhos
+            const newPopulation = [];
+
+            //Se o usupario selecionar a opção de elitismo o melhor individuo da população
+            //anterior sempre vai ser passado pra próxima população
+            if (ELITISMO) {
+                //alert("Elitismo ligado");
+                newPopulation.push(melhorIndividuoResposta);
+            }
+
+
+            while (newPopulation.length < POPULATION_SIZE) {
+                /*
+                const parent1 = tournamentSelection(population);
+                const parent2 = tournamentSelection(population);
+                rouletteWheelSelection//implem,entar depois
+                */
+                //seleção dos individuos
+                const parent1 =
+                    SELECTION_METHOD ?
+                        rouletteWheelSelection(population) : tournamentSelection(population);
+                const parent2 =
+                    SELECTION_METHOD ?
+                        rouletteWheelSelection(population) : tournamentSelection(population);
+                //reprodução dos individuos
+                //do amor de duas variaveis nasce uma criancinha
+                //que será brutalmente assasinada caso não seja util para a resolução do problema
+                let litleChild = sexo(parent1[0], parent2[0]);
+
+                //verificação de mutação
+                if (Math.random() < MUTATION_RATE) {
+                    litleChild = mutate(litleChild);//uma criancinha
+                }
+                newPopulation.push([litleChild, 0]);
+            }
+
+            //Atualiza a população
+            population = newPopulation;
+
+            //então...
+            //Por algum motivo tinha um desgraçado que era sempre 0
+            //population[0] = population[1];
+            //agora sumiu
+        }
+        if (!(generation < MAX_GENERATIONS)) {
+            //alert("Não foi possivel resolver o problema...");
+            console.log("Não foi possivel resolver");
+            return false;
+        }
+
+
+    }
+
+    //meuPrimeiroAlgoritmoGenetico(1000,0.1,10000,true);
+    function criaGrafico(melhorIndividuo, pioresIndividuo, mediaIndividuos, geracoes) {
+        // Lógica para preencher melhorIndividuo, mediaIndividuos, pioresIndividuo e geracoes
+        geracoes = criarLista(geracoes);
+
+        var canvas = document.getElementById('myChart');
+        if (canvas) {
+            // Remove o canvas do DOM
+            canvas.parentNode.removeChild(canvas);
+        }
+
+        // Cria um novo canvas
+        var newCanvas = document.createElement('canvas');
+        newCanvas.id = 'myChart';
+        document.getElementById('grafico-container').appendChild(newCanvas);
+
+        // Criar um gráfico com Chart.js
+        var ctx = document.getElementById('myChart').getContext('2d');
+        /*
+        var pointStyleD = 'circle';
+    var grossuraLinha = 3;
+    var suavidadeInterpolacao=0.2;
+    */
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: geracoes, // Usar o número de gerações como rótulos no eixo x
+                datasets: [{
+                    label: 'Melhor Indivíduo',
+                    data: melhorIndividuo,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: grossuraLinha,
+                    fill: false,
+                    pointStyle: pointStyleD,//'circle'
+                    tension: suavidadeInterpolacao
+                }, {
+                    label: 'Média dos Indivíduos',
+                    data: mediaIndividuos,
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: grossuraLinha,
+                    fill: false,
+                    pointStyle: pointStyleD,
+                    tension: suavidadeInterpolacao
+                }, {
+                    label: 'Pior Indivíduo',
+                    data: pioresIndividuo,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: grossuraLinha,
+                    fill: false,
+                    pointStyle: pointStyleD,
+                    tension: suavidadeInterpolacao
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: Math.min(...pioresIndividuo) - 5
+                    }
+                }
+            }
+        });
+    }
+
+    function start() {
+        fechaMenu();
+        let resultado = document.getElementById("resultado");
+        let graficoContainer = document.getElementById("grafico-container");
+        resultado.style.display = "block";
+        graficoContainer.style.display = "block";
+
+
+        let tamanhoPopu = document.getElementById("tamanhoPopu").value;
+        console.log(tamanhoPopu);
+        let mutacao = document.getElementById("mutacao").value;
+        console.log(mutacao);
+        let geracoes = document.getElementById("geracoes").value;
+        console.log(geracoes);
+        let metodoSelecao = document.getElementById("metodoSelecao").value;
+        console.log(metodoSelecao);
+
+
+        let elitismo = document.getElementById("elitismo").checked;
+        console.log(elitismo);
+
+        if (metodoSelecao === "") {
+            console.log("Undefined");
+            metodoSelecao = true;
+        }
+        if (metodoSelecao === "Roleta") {
+            console.log("Roleta");
+            metodoSelecao = false;
+
+        } if (metodoSelecao === "") {
+            console.log("Torneio");
+            metodoSelecao = true;
+        }
+
+        if (elitismo) {
+            //alert("Elitismo = true")
+            elitismo = true;
+        } else {
+            //alert("Elitismo = false")
+            //elitismo = false;
+        }
+
+        let solucaoOtima = document.getElementById("solucaoOtima");
+        if (false == meuPrimeiroAlgoritmoGenetico(tamanhoPopu, mutacao / 100, geracoes, metodoSelecao, elitismo)) {
+            //alert("Não foi possivel resolver");
+            solucaoOtima.innerText = "O sistema não foi capaz de encontrar uma boa solução com os parametros selecionados";
+        } else {
+            solucaoOtima.innerText = "Uma solução boa foi encontrada";
+        }
+
+        position = {};
+        let meuTabuleiro = melhorIndividuoResposta[0];
+        console.log("O melhor individuo foi");
+        console.log(meuTabuleiro);
+
+        //for para a converter a resposta de vetor para peçinhas que a biblioteca
+        //consiga entender
+        let quadrados = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        for (var row = 0; row < meuTabuleiro.length; row++) {
+            var coluna = meuTabuleiro[row];
+            console.log(String.fromCharCode(97 + coluna));
+            var square = quadrados[row] + (meuTabuleiro[row] + 1);
+            position[square] = 'bQ';
+        }
+        console.log(position);
+
+        document.getElementById("geracoesNecessarias").innerText = numeroGeracoes;
+        updatePosition(position);
+        criaGrafico(melhoresIndividuo, pioresIndividuo, mediaIndividuos, numeroGeracoes);
+        /*
+        console.log(melhoresIndividuo);
+        console.log(mediaIndividuos);
+        console.log(pioresIndividuo);
+        */
+        //reseta as variaveis
+        //isso deu uma dor de cabeça tremenda
+        melhoresIndividuo = [];
+        pioresIndividuo = [];
+        mediaIndividuos = [];
+        numeroGeracoes = 0;
+        melhorIndividuoResposta = null;
+
+
+
+    }
+    /*
+
+
+                                <input type="checkbox" id="tabu" name="dssdsd" checked />
+                                Tabuleiro Montado com a Primeira Resposta Encontrada
+                            </label>
+    var POPULATION_SIZE = 1000;
+        var MUTATION_RATE = 0.1;
+        var MAX_GENERATIONS = 100000;
+    */
+</script>
+
+<head>
+    <title></title>
+    <meta charset="utf-8">
+
+    <link rel="stylesheet" href="css/pico.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script>
+        var contador = 0;
+        /*
+        ['nada', 'tomateMaduro', 'tomateQuaseMaduro', 'tomateQuaseVerde', 'tomateVerde']
+        ['maoAberta', 'maoFechada', 'semMao']
+        */
+        var novs = {
+            "nada": ['#4286f4', '#325aa8', '#35495e'],
+            "tomateVerde": ['#6bff33', '#5aa832', '#35495e'],
+            "tomateQuaseVerde": ['#ffbd33', '#a88532', '#35495e'],
+            "tomateQuaseMaduro": ['#ff33d9', '#a8328a', '#35495e'],
+            "maoAberta": ['#6bff33', '#5aa832', '#35495e'],
+            "semMao": ['#ffbd33', '#a88532', '#35495e'],
+            "maoFechada": ['#ff33d9', '#a8328a', '#35495e'],
+            "tomateMaduro": ['#ff3342', '#a83247', '#35495e']
+        };
+        var themes = [
+            ["Verde", '#42b883', '#347474', '#35495e'],
+            ["Amarelo", '#ffc93c', '#ff9a3c', '#35495e'],
+            ["Azul", '#4286f4', '#325aa8', '#35495e'],
+            ["Vermelho", '#ff3342', '#a83247', '#35495e'],
+            ["Roxo", '#9b42f4', '#6532a8', '#35495e'],
+            ["Ciano", '#42f4d9', '#32a89e', '#35495e'],
+            ["Laranja", '#ff8c33', '#a87232', '#35495e'],
+            ["Rosa", '#ff33a4', '#a8326b', '#35495e'],
+            ["Verde Claro", '#6bff33', '#5aa832', '#35495e'],
+            ["Amarelo Claro", '#ffec33', '#a8a032', '#35495e'],
+            ["Azul Claro", '#33a3ff', '#3260a8', '#35495e'],
+            ["Vermelho Claro", '#ff334e', '#a8324f', '#35495e'],
+            ["Roxo Claro", '#d133ff', '#8a32a8', '#35495e'],
+            ["Ciano Claro", '#33fff3', '#32a89e', '#35495e'],
+            ["Laranja Claro", '#ffbd33', '#a88532', '#35495e'],
+            ["Rosa Claro", '#ff33d9', '#a8328a', '#35495e'],
+            ["Verde Escuro", '#194c1e', '#0e352d', '#1b2a38'],
+            ["Amarelo Escuro", '#8c7c0d', '#704a0d', '#59390d'],
+            ["Azul Escuro", '#0e1a4c', '#0d2b70', '#0d2d59'],
+            ["Vermelho Escuro", '#4c0e0e', '#700d0d', '#59100d'],
+            ["Roxo Escuro", '#3d0e4c', '#2d0d70', '#2c0d59'],
+            ["Ciano Escuro", '#0e4c48', '#0d2d70', '#0d2a59'],
+            ["Laranja Escuro", '#4c2b0e', '#70480d', '#592d0d'],
+            ["Rosa Escuro", '#4c0e2a', '#700d3b', '#59100e'],
+            ["Verde Médio", '#2c6a2f', '#214f29', '#35495e'],
+            ["Amarelo Médio", '#c4b317', '#a79d15', '#59390d'],
+            ["Azul Médio", '#294f6a', '#2d5d70', '#0d2d59'],
+            ["Vermelho Médio", '#872929', '#a22e2e', '#59100d'],
+            ["Roxo Médio", '#7a2a75', '#673574', '#4c2d59'],
+            ["Ciano Médio", '#298a87', '#2d8d99', '#35495e'],
+            ["Laranja Médio", '#9f6d2a', '#ac8139', '#592d0d'],
+            ["Rosa Médio", '#8a2a64', '#8c2d79', '#59100e'],
+            ["Verde Amarelado", '#95b542', '#809937', '#35495e'],
+            ["Amarelo Esverdeado", '#d9cc3c', '#c1b936', '#59390d'],
+            ["Azul Esverdeado", '#42a896', '#3a8b7f', '#0d2d59'],
+            ["Vermelho Esverdeado", '#a84a2e', '#94442b', '#59100d'],
+            ["Roxo Esverdeado", '#8d42a8', '#7a3495', '#4c2d59'],
+            ["Ciano Esverdeado", '#42a896', '#3a8b7f', '#35495e'],
+            ["Laranja Esverdeado", '#a8702a', '#8d682b', '#592d0d'],
+            ["Rosa Esverdeado", '#a84285', '#954275', '#59100e'],
+            ["Verde Azulado", '#2d756a', '#215d5a', '#35495e'],
+            ["Amarelo Azulado", '#c3d937', '#a6bf30', '#59390d'],
+            ["Azul Azulado", '#1f4670', '#1c3f59', '#0d2d59'],
+            ["Vermelho Azulado", '#702d2e', '#5e2c2c', '#59100d'],
+            ["Roxo Azulado", '#623d8f', '#4f3477', '#4c2d59'],
+            ["Ciano Azulado", '#1f6990', '#1d5982', '#35495e'],
+            ["Laranja Azulado", '#ac7b2a', '#996c2b', '#592d0d'],
+            ["Rosa Azulado", '#8f2a68', '#7c2b58', '#59100e'],
+            ["Verde Acinzentado", '#4c504d', '#3f4340', '#35495e'],
+            ["Amarelo Acinzentado", '#9e996c', '#888359', '#59390d'],
+            ["Azul Acinzentado", '#4c5c69', '#415057', '#0d2d59'],
+            ["Vermelho Acinzentado", '#704b4e', '#5c4244', '#59100d'],
+            ["Roxo Acinzentado", '#6a4879', '#5b3e66', '#4c2d59'],
+            ["Ciano Acinzentado", '#4c6669', '#415856', '#35495e'],
+            ["Laranja Acinzentado", '#8f7c57', '#7e704e', '#592d0d'],
+            ["Rosa Acinzentado", '#74566a', '#634a5a', '#59100e'],
+            ["Verde Amarelado Claro", '#c9d68c', '#b1c37b', '#35495e'],
+            ["Amarelo Esverdeado Claro", '#f0e798', '#dccf7f', '#59390d'],
+            ["Azul Esverdeado Claro", '#8cd4c0', '#7abbae', '#0d2d59'],
+            ["Vermelho Esverdeado Claro", '#e3a694', '#d18b7e', '#59100d'],
+            ["Roxo Esverdeado Claro", '#d9a3d8', '#c18ec4', '#4c2d59'],
+            ["Ciano Esverdeado Claro", '#8cd4c0', '#7abbae', '#35495e'],
+            ["Laranja Esverdeado Claro", '#e0bb8c', '#ccaa79', '#592d0d'],
+            ["Rosa Esverdeado Claro", '#d9a3c1', '#c18ead', '#59100e'],
+            ["Verde Azulado Claro", '#8ccdbf', '#7ab5ad', '#35495e'],
+            ["Amarelo Azulado Claro", '#f0f3a1', '#dbe36b', '#59390d'],
+            ["Azul Azulado Claro", '#6885af', '#576f94', '#0d2d59'],
+            ["Vermelho Azulado Claro", '#b88a8c', '#a3767e', '#59100d'],
+            ["Roxo Azulado Claro", '#ab8ec5', '#9a7db4', '#4c2d59'],
+            ["Ciano Azulado Claro", '#6885af', '#576f94', '#35495e'],
+            ["Laranja Azulado Claro", '#cbb08c', '#b8a178', '#592d0d'],
+            ["Rosa Azulado Claro", '#af8cc1', '#9d7bb0', '#59100e'],
+            ["Verde Acinzentado Claro", '#a7aead', '#959e9c', '#35495e'],
+            ["Amarelo Acinzentado Claro", '#d7d4ba', '#c5c0aa', '#59390d'],
+            ["Azul Acinzentado Claro", '#a7b4bd', '#959ea7', '#0d2d59'],
+            ["Vermelho Acinzentado Claro", '#bda7a8', '#ab9798', '#59100d'],
+            ["Roxo Acinzentado Claro", '#b7a8b9', '#a598a7', '#4c2d59'],
+            ["Ciano Acinzentado Claro", '#a7b4bd', '#959ea7', '#35495e'],
+            ["Laranja Acinzentado Claro", '#c8b8a2', '#b6a892', '#592d0d'],
+            ["Rosa Acinzentado Claro", '#baa7b6', '#a996a5', '#59100e']
+        ];
+
+        var mode; //modo luz
+        function changeTheme() {
+
+
+        }
+        //definição UI
+        var root = document.documentElement;
+        document.documentElement.setAttribute('data-theme', 'dark');
+        root.style.setProperty('--primary', themes[3][1]);
+        root.style.setProperty('--primary-hover', themes[3][2]);
+        root.style.setProperty('--primary-focus', themes[3][3]);
+        root.style.setProperty('--primary-inverse', '#FFF');
+
+        function changeMode() {
+
+        }
+
+
+        function mudaUi(msg) {
+            //console.log(novs[msg]);
+            var root = document.documentElement;
+            root.style.setProperty('--primary', novs[msg][1]);
+            root.style.setProperty('--primary-hover', novs[msg][2]);
+            root.style.setProperty('--primary-focus', novs[msg][2]);
+            root.style.setProperty('--primary-inverse', '#FFF');
+
+            contador++;
+            if (contador >= 50) {
+                contador = 0;
+            }
+        }
+
+
+
+        mode = parseInt(localStorage.getItem("mode"));
+        contador = parseInt(localStorage.getItem("contador"));
+        if (isNaN(contador)) {
+            contador = 0;
+        }
+        console.log("A variavel mode está: " + localStorage.getItem("mode"));
+        console.log(mode); // Outputs: Hello
+        console.log(contador); // Outputs: World
+
+        function updatePopulationSize() {
+            var slider = document.getElementById("tamanhoPopu");
+            var value = slider.value;
+            var span = document.getElementById("populationSize");
+            span.textContent = value;
+        }
+
+        function updateGeracao() {
+            var slider = document.getElementById("geracoes");
+            var value = slider.value;
+            var span = document.getElementById("geracoesSize");
+            span.textContent = value;
+        }
+        function updateGrossura() {
+            var slider = document.getElementById("grossuraLinha");
+            var value = slider.value;
+            var span = document.getElementById("grossuraSize");
+            span.textContent = value;
+            grossuraLinha = value;
+        }
+        function updateSuavidade() {
+            var slider = document.getElementById("suavidade");
+            var value = slider.value;
+            var span = document.getElementById("suavidadeSize");
+            span.textContent = value;
+            suavidadeInterpolacao = value/100;
+        }
+
+        function updateFigura() {
+            var tipoFigura = document.getElementById("figura");
+            var value = tipoFigura.value;
+            //alert(value);
+            pointStyleD = value;
+
+            if (value === "false") {
+                pointStyleD = false;
+            }
+            //grossuraLinha=value;
+        }
+
+
+        function updateInterpo() {
+            var slider = document.getElementById("interpo");
+            var value = slider.value;
+            var span = document.getElementById("interpoSize");
+            span.textContent = value;
+            suavidadeInterpolacao = value / 100;
+        }
+
+        function uptadeMutacao() {
+            var slider = document.getElementById("mutacao");
+            var value = slider.value;
+            var span = document.getElementById("mutacaoSize");
+            span.textContent = value;
+        }
+
+    </script>
+</head>
+
+<body>
+    <hr>
+    <div>
+        <script src="jquery.js"></script>
+
+        <script src="js/chessboard-1.0.0.js"></script>
+        <script src="chess.js"></script>
+        <link rel="stylesheet" href="css/chessboard-1.0.0.css">
+
+        <div id="carrinhos" class="container">
+            <h2>Problema das 8 Damas com algoritmo genético</h2>
+            <p>Descrição do problema:
+                O objetivo do problema é colocar 8 DAMAS em um tabuleiro de forma que nenhuma DAMA ataque outra. (Uma
+                DAMA ataca outra se esta estiver na diagonal e/ou horizontal e/ou vertical). Este tipo de problema,
+                pertence a classe dos casos em que dado um estado inicial a solução consiste em encontrar uma melhor
+                configuração final, mesmo que esta não seja a mais satisfatória.
+            </p>
+
+
+
+            <span class="cardCarrinho">
+                <article class="grid">
+                    <div id="myBoard1" style="width: 400px"></div>
+
+                    <div>
+                        <h3>Estado Inicial</h3>
+                        <p>No estado inicial desse problema as 8 damas podem ser colocadas em qualquer casinha do
+                            tabuleiro de xadrez. O algoritmo deve impedir que as damas se ataquem.</p>
+                        <p>As damas atacam nas verticais, horizontais e diagonais relacionadas ao cubinho onde ela está
+                        </p>
+                    </div>
+                </article>
+                <article class="grid">
+                    <img src="Capturar.JPG">
+                    <div>
+                        <h3>Algoritmos Genéticos</h3>
+                        <p>Os algoritmos genéticos são inspirados na
+                            evolução biológica dos seres vivos, ou seja,
+                            na seleção natural.
+                        </p>
+
+
+                    </div>
+                </article>
+                <article>
+                    <h2>Função Genétia desenvolvida</h2>
+                    <pre><code class="javascript">
+function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERATIONS, SELECTION_METHOD, ELITISMO) {
+        //se vier thrue no selection_method então é pra executar o torneio, se false a roleta
+
+        // Funbção para gerar um tabuleiro aleatório
+        function geraTabuleiroAleatorio() {
+            //Math.random gera um n[umero aleatório entre 0 e 1]
+            const tabuleiro = Array.from({ length: 8 }, () => Math.floor(Math.random() * 8));
+            return tabuleiro;
+        }
+        //função de cruzamento
+        function sexo(parent1, parent2) {
+            //selecionar qual o ponto de troca
+            const sexoPoint = Math.floor(Math.random() * 7) + 1;
+            const litleChild = [...parent1.slice(0, sexoPoint), ...parent2.slice(sexoPoint)];
+            //retorna um novo individuo
+            return litleChild;
+        }
+
+        // função de mutação
+        function mutate(situacaoDoTabuleiro) {
+            //gera 2 numeros aleatórios e realiza a troca de posição do que tem dentro de um com
+            //o que ta no outro.
+            //Talvez possa gerar um novo valor aleatório ao invés de trocar 2 posições...
+            //lembro que o joão paulo disse isso
+            const [pos1, pos2] = [Math.floor(Math.random() * 8), Math.floor(Math.random() * 8)];
+            [situacaoDoTabuleiro[pos1], situacaoDoTabuleiro[pos2]] = [situacaoDoTabuleiro[pos2], situacaoDoTabuleiro[pos1]];
+            return situacaoDoTabuleiro;
+        }
+
+        // função fitness do algoritmo
+        //ele verifica quantos pares de damas estão se atacando
+        function calculateFitness(boardState) {
+            let conflicts = 0;
+            //console.log(boardState);//AAAAAAAAAAAAAAAAAAAAAAAAA
+
+            for (let i = 0; i < 8; i++) {
+                for (let j = i + 1; j < 8; j++) {
+
+                    if (boardState[i] === boardState[j] || Math.abs(boardState[i] - boardState[j]) === j - i) {
+                        conflicts += 1;
+                    }
+
+                }
+            }
+            //alert(`${boardState} --- ${28 - conflicts}`);
+            return 28 - conflicts; // 28 é o máximo possivel
+            //o retorno é o número máximo POSSIVEL de conflitos de pares de damas menos o valor desse estado
+            //achei confuso então tive q contar
+            //7+6+5+4+3+2+1
+            //se todas as damas estiverem enfileiradas a primeira tem 7 conflitos
+            //a segunda tem 7-DamaAnterior = 6
+            //a terceira tem 6-DamaAnterior*2 = 5
+            //4
+            //e assim por diante
+        }
+
+
+
+
+        // seleciona os pais para o cruzamento com o método de torneio
+        function tournamentSelection(population) {
+            const tournamentSize = 5;
+            const tournament = [];
+
+            //seleciona 5 individuos aleatoriamente
+            for (let i = 0; i < tournamentSize; i++) {
+                tournament.push(population[Math.floor(Math.random() * population.length)]);
+            }
+
+            //retorna o melhor individuo dos 5 selecionados no torneio
+            //ele vai se reproduzir 
+            //console.log(`Tronament ${tournament.reduce((max, current) => (current[1] > max[1] ? current : max))}`);
+            return tournament.reduce((max, current) => (current[1] > max[1] ? current : max));
+        }
+
+        //seleciona os individuos para cruzamento pelo metodo da roleta
+        function rouletteWheelSelection(population) {
+            // soma todas as aptidões da população
+            const totalFitness = population.reduce((total, individual) => total + individual[1], 0);
+
+            // gera um número entre 0 e a soma total de aptidões
+            //esse número que vai o divisor
+            //math.random gera numero de 0 a 1 ão esquecer
+            //achei q era polimorfisada, mas ela é assim mesmo por incrivel que pareça
+            const randomValue = Math.random() * totalFitness;
+            let currentSum = 0;
+
+            /*
+            Acho mais elegante assim do que só percentagem, apesar de ser percentagem
+            É como se fosse uma pizza
+            */
+            // percorre toda a população até achar o primeiro que a soma passa o valor aleatório
+            for (const individual of population) {
+                currentSum += individual[1];
+                if (currentSum >= randomValue) {
+                    //retorna o carinha
+                    return individual;
+                }
+            }
+        }
+
+
+        // cria a população inicial
+        let population = Array.from({ length: POPULATION_SIZE }, () => [geraTabuleiroAleatorio(), 0]);
+        //console.log(population);
+
+
+        // Loop do algoritmo genético, depois transformar em função
+        let generation = 1
+        for (generation; generation < MAX_GENERATIONS; generation++) {
+            //Calcula a apstidão de toda a população em todo inicio do loop
+            //é o terceiro bloquinho do diagrama do jaõ paulo
+            //adiciona a lista um novo elemento, que é a aaptidão
+            //a lita vai ficar com essa cara
+            //[([0,2,3,4,5,6,7,8],20)]
+            //o vetorzinho de 8 elementos são as damas e o inteiro da tupla 
+            //CADA INDIVIDUO É UMA TUPLA
+            //A PRIMEIRA PARTE TEM A POSIÇÃO E A SEGUNDA TEM A APTIDÃO
+            population = population.map(([boardState]) => [boardState, calculateFitness(boardState)]);
+
+            //separa a aptidão pra ficar mais fácil de manipular
+            //teria como sem separar, mas é dificil
+            let fitness = population.map(function (item) {
+                return item[1];
+            });
+
+            // eExibir a nova lista na console
+            //console.log(fitness);
+
+            //informaçoes
+            console.log("=========================================");
+            console.log(`estamos na ${generation} geração`);
+            console.log(`O melhor individuo tem ${Math.max(...fitness)}`);
+            console.log(`O pior individuo tem ${Math.min(...fitness)}`);
+            const meanFitness = population.reduce((total, [, fitness]) => total + fitness, 0) / POPULATION_SIZE;
+            console.log(`A média dos individuos é ${meanFitness}`);
+
+            //armazendando infos pra msotrar no grafico
+            melhoresIndividuo.push(Math.max(...fitness));
+            pioresIndividuo.push(Math.min(...fitness));
+            mediaIndividuos.push(meanFitness);
+            numeroGeracoes = generation;
+
+
+            var bestBoardState = Math.max(...fitness);
+            let maxIndex = fitness.indexOf(bestBoardState);
+            melhorIndividuoResposta = population[maxIndex];
+            //se existe algum individuo onde não há nenhum par de rainhas se atacando
+            //(lembrar q esse 28 é lá de cima do máximo número de ruindade possivel)
+            if (bestBoardState === 28) {
+                console.log("A SOLUÇÃO FOI ENCONTRADA NA GERAÇÃO", generation);
+                console.log("Beast solution:", population[maxIndex]);
+                melhorIndividuoResposta = population[maxIndex];
+                break;
+            }
+
+            //cria a nova população, os filhos
+            const newPopulation = [];
+
+            //Se o usupario selecionar a opção de elitismo o melhor individuo da população
+            //anterior sempre vai ser passado pra próxima população
+            if (ELITISMO) {
+                //alert("Elitismo ligado");
+                newPopulation.push(melhorIndividuoResposta);
+            }
+
+
+            while (newPopulation.length < POPULATION_SIZE) {
+                /*
+                const parent1 = tournamentSelection(population);
+                const parent2 = tournamentSelection(population);
+                rouletteWheelSelection//implem,entar depois
+                */
+                //seleção dos individuos
+                const parent1 =
+                    SELECTION_METHOD ?
+                        rouletteWheelSelection(population) : tournamentSelection(population);
+                const parent2 =
+                    SELECTION_METHOD ?
+                        rouletteWheelSelection(population) : tournamentSelection(population);
+                //reprodução dos individuos
+                //do amor de duas variaveis nasce uma criancinha
+                //que será brutalmente assasinada caso não seja util para a resolução do problema
+                let litleChild = sexo(parent1[0], parent2[0]);
+
+                //verificação de mutação
+                if (Math.random() < MUTATION_RATE) {
+                    litleChild = mutate(litleChild);//uma criancinha
+                }
+                newPopulation.push([litleChild, 0]);
+            }
+
+            //Atualiza a população
+            population = newPopulation;
+
+            //então...
+            //Por algum motivo tinha um desgraçado que era sempre 0
+            //population[0] = population[1];
+            //agora sumiu
+        }
+        if (!(generation < MAX_GENERATIONS)) {
+            //alert("Não foi possivel resolver o problema...");
+            console.log("Não foi possivel resolver");
+            return false;
+        }
+
+
+    }
+
+                        </code></pre>
+                </article>
+                <article>
+                    <div id="floating">
+                        <h3>Menu de Execução Genético</h3>
+                        <p>Por favor informe os parametros de execução do algortimo!
+                        </p>
+                        <hr>
+                        <div class="grid">
+                            <p>Tamanho da População: <span id="populationSize">100</span></p>
+                            <input type="range" id="tamanhoPopu" value="100" name="tamanhoPopu" min="0" max="1000"
+                                oninput="updatePopulationSize()">
+                        </div>
+                        <div class="grid">
+                            <p>Chanse de Mutação: <span id="mutacaoSize">10</span>%</p>
+                            <input type="range" id="mutacao" name="mutacao" value="10" min="0" max="100"
+                                oninput="uptadeMutacao()">
+                        </div>
+                        <div class="grid">
+                            <p>Numero máximo de Gerações: <span id="geracoesSize">200</span></p>
+                            <input type="range" id="geracoes" name="geracoes" min="0" value="200" max="10000"
+                                oninput="updateGeracao()">
+                        </div>
+                        <div class="grid">
+                            <p>Operador de Seleção</p>
+                            <select id="metodoSelecao" aria-label="Selecione o método..." required>
+
+                                <option>Roleta</option>
+                                <option selected>Torneio</option>
+                            </select>
+                        </div>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" id="elitismo" name="sd" checked />
+                                Elitismo
+                            </label>
+
+                        </fieldset>
+                        <div class="grid">
+                            <button onclick="start()">Iniciar Algoritmo</button>
+                            <button onclick="fechaMenu()">Fechar Menu</button>
+                        </div>
+                        
+                    </div>
+                    <div>
+                        <h3>Opções para o gráfico</h3>
+                        <div class="">
+                            <div class="grid">
+                                <p>Figura do Gráfico</p>
+                                <select onchange="updateFigura()" id="figura" aria-label="Selecione..." required>
+                                    <option>false</option>
+                                    <option>triangle</option>
+                                    <option>rect</option>
+                                    <option selected>circle</option>
+                                </select>
+                            </div>
+                            <div class="grid">
+                                <p>Grossura da Linha: <span id="grossuraSize">3</span></p>
+                                <input type="range" id="grossuraLinha" name="grossuraLinha" min="0" value="3" max="10"
+                                    oninput="updateGrossura()">
+                            </div>
+                            <div class="grid">
+                                <p>Suavização da Interpolação: <span id="suavidadeSize">20</span>%</p>
+                                <input type="range" id="suavidade" name="suavidade" min="0" value="20" max="100"
+                                    oninput="updateSuavidade()">
+                            </div>
+                        <button onclick="ativaFloat()">Abrir menu do algoritmo</button>
+                        </div>
+                    </div>
+                    <div>
+
+                        <br>
+                        
+
+                    </div>
+                </article>
+                <article style="display: none;" id="resultado" class="grid">
+                    <div>
+                        <div>
+                            <h3>Foram necessárias <span id="geracoesNecessarias">X</span> gerações</h3>
+                            <h4 id="solucaoOtima">O sistema não obteve uma solução ótima com os parametros informados
+                            </h4>
+                            <p>Ao lado se encontra a solução encontrada pelo algoritmo</p>
+                            <p>Na div abaixo se encontram os gráficos: </p>
+                        </div>
+                        <div id="myBoard" style="width: 400px"></div>
+                    </div>
+                    <div>
+                    </div>
+                    <script>
+                        var position = {
+                            d1: 'bQ',
+                            d2: 'bQ',
+                            d3: 'bQ',
+                            d4: 'bQ',
+                            d5: 'bQ',
+                            d6: 'bQ',
+                            d7: 'bQ',
+                            d8: 'bQ',
+                        };
+
+                        var config = {
+                            draggable: true,
+                            dropOffBoard: 'snapback', 
+                            position: position
+                        };
+
+                        var board = Chessboard('myBoard', config);
+
+                        function updatePosition(newPosition) {
+                            board.position(newPosition);
+                        }
+
+
+
+
+                    </script>
+                </article>
+                <article style="background-color: aliceblue;display: none;" id="grafico-container">
+                    <canvas id="myChart"></canvas>
+                </article>
+                <article>
+
+                </article>
+            </span>
+
+        </div>
+    </div>
+    <script>
+        var game = new Chess()
+        var position = {
+            a5: 'bQ',
+            b6: 'bQ',
+            c5: 'bQ',
+            d5: 'wQ',
+            e5: 'bQ',
+            f1: 'bQ',
+            g2: 'bQ',
+            h8: 'bQ',
+
+        };
+
+        var config = {
+            //draggable: true,
+            dropOffBoard: 'snapback', // this is the default
+            position: position
+        };
+        var b = null;
+
+        var whiteSquareGrey = '#a9a9a9'
+        var blackSquareGrey = '#696969'
+
+        var whiteSquareRed = '#ed0e2f'
+        var blackSquareRed = '#bf5e88'
+
+        function redSquare(square) {
+            var $square = $('#myBoard1 .square-' + square)
+
+            var background = whiteSquareRed
+            if ($square.hasClass('black-3c85d')) {
+                background = blackSquareRed
+            }
+
+            $square.css('background', background)
+        }
+
+        function greySquare(square) {
+            var $square = $('#myBoard1 .square-' + square)
+
+            var background = whiteSquareGrey
+            if ($square.hasClass('black-3c85d')) {
+                background = blackSquareGrey
+            }
+
+            $square.css('background', background)
+        }
+        var board1 = Chessboard('myBoard1', config);
+
+        function onMouseoverSquare(square, piece) {
+            // get list of possible moves for this square
+            var moves = game.moves({
+                square: square,
+                verbose: true
+            })
+
+            // exit if there are no moves available for this square
+            if (moves.length === 0) return
+
+            // highlight the square they moused over
+            greySquare(square)
+
+            // highlight the possible squares for this piece
+            for (var i = 0; i < moves.length; i++) {
+                greySquare(moves[i].to)
+            }
+        }
+
+        function diagonals(square) {
+            const fileLetters = 'abcdefgh';
+            const rankNumbers = '12345678';
+            const diagonals = [];
+
+            // Obter coordenadas da casa
+            const fileIndex = fileLetters.indexOf(square[0]);
+            const rankIndex = rankNumbers.indexOf(square[1]);
+
+            // Diagonal principal (ascendente)
+            for (let i = -Math.min(fileIndex, rankIndex); i < Math.min(8 - fileIndex, 8 - rankIndex); i++) {
+                if (i !== 0) {
+                    diagonals.push(fileLetters[fileIndex + i] + rankNumbers[rankIndex + i]);
+                }
+            }
+
+            // Diagonal secundária (descendente)
+            for (let i = -Math.min(7 - fileIndex, rankIndex); i < Math.min(fileIndex + 1, 8 - rankIndex); i++) {
+                if (i !== 0) {
+                    diagonals.push(fileLetters[fileIndex - i] + rankNumbers[rankIndex + i]);
+                }
+            }
+
+            return diagonals;
+        }
+        function getAllRelatedSquares(square) {
+            const fileLetters = 'abcdefgh';
+            const rankNumbers = '12345678';
+            const relatedSquares = [];
+
+            // Obter coordenadas da casa
+            const fileIndex = fileLetters.indexOf(square[0]);
+            const rankIndex = rankNumbers.indexOf(square[1]);
+
+            // Horizontal e vertical
+            for (let i = 0; i < 8; i++) {
+                if (i !== rankIndex) {
+                    relatedSquares.push(fileLetters[fileIndex] + rankNumbers[i]); // Vertical
+                }
+                if (i !== fileIndex) {
+                    relatedSquares.push(fileLetters[i] + rankNumbers[rankIndex]); // Horizontal
+                }
+            }
+
+            // Diagonal principal (ascendente)
+            for (let i = -Math.min(fileIndex, rankIndex); i < Math.min(8 - fileIndex, 8 - rankIndex); i++) {
+                if (i !== 0) {
+                    relatedSquares.push(fileLetters[fileIndex + i] + rankNumbers[rankIndex + i]);
+                }
+            }
+
+            // Diagonal secundária (descendente)
+            for (let i = -Math.min(7 - fileIndex, rankIndex); i < Math.min(fileIndex + 1, 8 - rankIndex); i++) {
+                if (i !== 0) {
+                    relatedSquares.push(fileLetters[fileIndex - i] + rankNumbers[rankIndex + i]);
+                }
+            }
+
+            return relatedSquares;
+        }
+        function redMarker(source) {
+            const diagonais = getAllRelatedSquares(source);
+
+            diagonais.forEach(diagonal => {
+                console.log(diagonal);
+                redSquare(diagonal);
+            });
+            console.log(diagonals(oldPos));
+            //greySquare("a1");
+        }
+        redMarker('d5');
+        /*
+        
+                function onDragMove(oldPos, newPos, source, piece, orientation) {
+                    const diagonais = diagonals(source);
+                    diagonais.forEach(diagonal => {
+                        console.log(diagonal);
+                        greySquare(diagonal);
+                    });
+                    console.log(diagonals(oldPos));
+                    //greySquare("a1");
+                }
+               */
+
+    </script>
+    <br>
+    <br>
+    <br>
+    <!-- Eu não tenho orgulho desses <br>...-->
+    <div class="container">
+        <div class="grid">
+            <button id="controlaTema" onclick="changeMode()">Mudar Cores</button>
+            <button id="controlaTemaClaroEscuro" onclick="changeTheme()">Mudar Tema</button>
+        </div>
+    </div>
+
+
+    <hr>
+    <footer>
+        <h3>Inserir informações aqui no Footer</h3>
+        <p>IFPR nenhum direito reservado</p>ARRUAMR REFERENCIAS
+        https://sites.icmc.usp.br/sandra/g6_t2/rainha.htm
+        <p>Email: ashusahusahusahuas@asuisahuhusa.com</p>
+        <p>Responsavel: Anonhimbu Anhuambi Asmsau</p>
+    </footer>
+</body>
+
+</html>
+<script>
+
+    changeTheme();
+    changeMode();
+
+</script>
+
+<div id="toggleFloating" onclick="ativaFloat()">Abrir Menu do Algoritmo</div>
+
+<style>
+
+    #toggleFloating {
+        position: fixed;
+        bottom: 20px;
+        /* Adjust as needed */
+        right: 20px;
+        background-color: #9b42f4;
+        color: #fff;
+        /* Adjust as needed */
+        padding: 10px 20px;
+        border-radius: 5%;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.4s;
+    }
+    #floating {
+        display: none;
+        position: fixed;
+        top: 0px;
+        /* Adjust as needed */
+        right: 0px;
+        /* Adjust as needed */
+        background-color: #444444;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 2%;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        transform: scale(0.95);
+    }
+
+    #floating:hover {
+        transform: scale(1.0);
+    }
+</style>
+<script>
+    function fechaMenu(){
+        let floatingElement = document.getElementById("floating");
+        let botaoPara = document.getElementById("toggleFloating");
+        console.log("Hum");
+        floatingElement.style.display="none";
+        botaoPara.style.display="block";
+    }
+    function ativaFloat(){
+        let floatingElement = document.getElementById("floating");
+        let botaoPara = document.getElementById("toggleFloating");
+
+        console.log("Hum");
+        floatingElement.style.display="block";
+        botaoPara.style.display="none";
+    }
+    
+    
+</script>
