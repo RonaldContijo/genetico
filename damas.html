@@ -574,7 +574,7 @@
             var value = slider.value;
             var span = document.getElementById("suavidadeSize");
             span.textContent = value;
-            suavidadeInterpolacao = value/100;
+            suavidadeInterpolacao = value / 100;
         }
 
         function updateFigura() {
@@ -619,12 +619,7 @@
 
         <div id="carrinhos" class="container">
             <h2>Problema das 8 Damas com algoritmo genético</h2>
-            <p>Descrição do problema:
-                O objetivo do problema é colocar 8 DAMAS em um tabuleiro de forma que nenhuma DAMA ataque outra. (Uma
-                DAMA ataca outra se esta estiver na diagonal e/ou horizontal e/ou vertical). Este tipo de problema,
-                pertence a classe dos casos em que dado um estado inicial a solução consiste em encontrar uma melhor
-                configuração final, mesmo que esta não seja a mais satisfatória.
-            </p>
+
 
 
 
@@ -633,27 +628,23 @@
                     <div id="myBoard1" style="width: 400px"></div>
 
                     <div>
-                        <h3>Estado Inicial</h3>
-                        <p>No estado inicial desse problema as 8 damas podem ser colocadas em qualquer casinha do
-                            tabuleiro de xadrez. O algoritmo deve impedir que as damas se ataquem.</p>
-                        <p>As damas atacam nas verticais, horizontais e diagonais relacionadas ao cubinho onde ela está
+                        <h3>Descrição do problema:</h3>
+                        <p>O problema das 8 rainhas é um quebra-cabeça clássico em que o objetivo é posicionar oito
+                            rainhas em um tabuleiro de xadrez de 8x8 de tal forma que nenhuma rainha possa atacar outra.
+                            Em termos mais simples, isso significa que nenhuma rainha deve compartilhar a mesma linha,
+                            coluna ou diagonal com outra rainha. Este problema é interessante porque envolve estratégia,
+                            visualização espacial e pensamento lógico.
+
+                            Embora pareça simples, encontrar uma solução para o problema das 8 rainhas pode ser bastante
+                            desafiador devido às muitas combinações possíveis de posições das rainhas. Existem várias
+                            abordagens para resolver este problema, incluindo métodos de força bruta, backtracking e
+                            algoritmos mais sofisticados, como algoritmos genéticos.</p>
                         </p>
                     </div>
                 </article>
-                <article class="grid">
-                    <img src="Capturar.JPG">
-                    <div>
-                        <h3>Algoritmos Genéticos</h3>
-                        <p>Os algoritmos genéticos são inspirados na
-                            evolução biológica dos seres vivos, ou seja,
-                            na seleção natural.
-                        </p>
 
-
-                    </div>
-                </article>
                 <article>
-                    <h2>Função Genétia desenvolvida</h2>
+                    <h2>Função Genética Desenvolvida</h2>
                     <pre><code class="javascript">
 function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERATIONS, SELECTION_METHOD, ELITISMO) {
         //se vier thrue no selection_method então é pra executar o torneio, se false a roleta
@@ -873,18 +864,18 @@ function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERA
                         </p>
                         <hr>
                         <div class="grid">
-                            <p>Tamanho da População: <span id="populationSize">100</span></p>
-                            <input type="range" id="tamanhoPopu" value="100" name="tamanhoPopu" min="0" max="1000"
+                            <p>Tamanho da População: <span id="populationSize">150</span></p>
+                            <input type="range" id="tamanhoPopu" value="150" name="tamanhoPopu" min="0" max="500"
                                 oninput="updatePopulationSize()">
                         </div>
                         <div class="grid">
-                            <p>Chanse de Mutação: <span id="mutacaoSize">10</span>%</p>
-                            <input type="range" id="mutacao" name="mutacao" value="10" min="0" max="100"
+                            <p>Chance de Mutação: <span id="mutacaoSize">5</span>%</p>
+                            <input type="range" id="mutacao" name="mutacao" value="5" min="0" max="100"
                                 oninput="uptadeMutacao()">
                         </div>
                         <div class="grid">
                             <p>Numero máximo de Gerações: <span id="geracoesSize">200</span></p>
-                            <input type="range" id="geracoes" name="geracoes" min="0" value="200" max="10000"
+                            <input type="range" id="geracoes" name="geracoes" min="0" value="200" max="500"
                                 oninput="updateGeracao()">
                         </div>
                         <div class="grid">
@@ -906,7 +897,7 @@ function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERA
                             <button onclick="start()">Iniciar Algoritmo</button>
                             <button onclick="fechaMenu()">Fechar Menu</button>
                         </div>
-                        
+
                     </div>
                     <div>
                         <h3>Opções para o gráfico</h3>
@@ -930,13 +921,13 @@ function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERA
                                 <input type="range" id="suavidade" name="suavidade" min="0" value="20" max="100"
                                     oninput="updateSuavidade()">
                             </div>
-                        <button onclick="ativaFloat()">Abrir menu do algoritmo</button>
+                            <button onclick="ativaFloat()">Abrir menu do algoritmo</button>
                         </div>
                     </div>
                     <div>
 
                         <br>
-                        
+
 
                     </div>
                 </article>
@@ -967,7 +958,7 @@ function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERA
 
                         var config = {
                             draggable: true,
-                            dropOffBoard: 'snapback', 
+                            dropOffBoard: 'snapback',
                             position: position
                         };
 
@@ -1179,7 +1170,6 @@ function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERA
 <div id="toggleFloating" onclick="ativaFloat()">Abrir Menu do Algoritmo</div>
 
 <style>
-
     #toggleFloating {
         position: fixed;
         bottom: 20px;
@@ -1194,6 +1184,7 @@ function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERA
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         transition: transform 0.4s;
     }
+
     #floating {
         display: none;
         position: fixed;
@@ -1216,21 +1207,21 @@ function meuPrimeiroAlgoritmoGenetico(POPULATION_SIZE, MUTATION_RATE, MAX_GENERA
     }
 </style>
 <script>
-    function fechaMenu(){
+    function fechaMenu() {
         let floatingElement = document.getElementById("floating");
         let botaoPara = document.getElementById("toggleFloating");
         console.log("Hum");
-        floatingElement.style.display="none";
-        botaoPara.style.display="block";
+        floatingElement.style.display = "none";
+        botaoPara.style.display = "block";
     }
-    function ativaFloat(){
+    function ativaFloat() {
         let floatingElement = document.getElementById("floating");
         let botaoPara = document.getElementById("toggleFloating");
 
         console.log("Hum");
-        floatingElement.style.display="block";
-        botaoPara.style.display="none";
+        floatingElement.style.display = "block";
+        botaoPara.style.display = "none";
     }
-    
-    
+
+
 </script>
