@@ -186,7 +186,7 @@
             console.log(valorTotal);
             if (pesoTotal > MAX_WEIGHT) {
                 //return mochilaMochila.value * (1/(mochilaMochila.totalWeight / MAX_WEIGHT)*0.8);
-                return valorTotal * 0.00 * (MAX_WEIGHT / (pesoTotal)) * (MAX_WEIGHT / (pesoTotal)) * (MAX_WEIGHT / (pesoTotal) * (MAX_WEIGHT / (pesoTotal))) * MAX_WEIGHT / (pesoTotal) * MAX_WEIGHT / (pesoTotal) * MAX_WEIGHT / (pesoTotal) * MAX_WEIGHT / (pesoTotal);
+                return valorTotal * 0;
             }
             return valorTotal;
 
@@ -247,8 +247,23 @@
             console.log(`estamos na ${generation} geração`);
             console.log(`O melhor individuo tem ${Math.max(...fitness)}`);
             console.log(`O pior individuo tem ${Math.min(...fitness)}`);
-            const meanFitness = population.reduce((total, [, fitness]) => total + fitness, 0) / POPULATION_SIZE;
+            console.log(fitness);
+
+            let somaFitness = 0;
+
+            // Loop for para percorrer o vetor e somar os valores de 'fitness'
+            for (let i = 0; i < fitness.length; i++) {
+                somaFitness += fitness[i];
+            }
+            console.log(`SomaFit ${somaFitness}`);
+            console.log(`PopZis ${fitness.length}`);
+            
+            const meanFitness = somaFitness/fitness.length;//population.reduce((total, [, fitness]) => total + fitness, 0) / (POPULATION_SIZE+1);
             console.log(`A média dos individuos é ${meanFitness}`);
+
+            //return 0;
+
+            
             const moda = calcularModa(fitness);
             const mediana = calcularMediana(fitness);
             console.log(`A moda dos individuos é ${moda}`);
@@ -498,8 +513,16 @@
         medianaIndividuos = [];
         numeroGeracoes = 0;
 
+        let pesoTotal = 0;
+        for (let i = 0; i <= melhorIndividuoResposta[0].length; i++) {
+            if (melhorIndividuoResposta[0][i] === 1) {
+                pesoTotal += peso_itens[i];
+                //console.log(`a mochila possui o elemento ${nome_itens[i]}`)
+            }
+        }
+        mostrarItensMochila();
         document.getElementById("melhorInd").innerText = "[" + melhorIndividuoResposta[0] + "]";
-        document.getElementById("fitMe").innerText = "Valor = [" + melhorIndividuoResposta[1] + "]";
+        document.getElementById("fitMe").innerHTML = "Valor Total = [" + melhorIndividuoResposta[1] + "]<br>Peso Total = ["+pesoTotal+"]";
 
     }
 
@@ -1033,12 +1056,12 @@ function mutate(mochila) {
                                     oninput="updateNumItens()">
                             </div>
                             <div class="grid">
-                                <p>Valor Máimo por Item: <span id="valorMaimoSize">20</span></p>
+                                <p>Valor Máximo por Item: <span id="valorMaimoSize">20</span></p>
                                 <input type="range" id="valorMaimo" name="valorMaimo" min="0" value="20" max="100"
                                     oninput="updateValorMaimo()">
                             </div>
                             <div class="grid">
-                                <p>Peso Máimo por Item: <span id="pesoMaimoSize">20</span></p>
+                                <p>Peso Máximo por Item: <span id="pesoMaimoSize">20</span></p>
                                 <input type="range" id="pesoMaimo" name="pesoMaimo" min="0" value="20" max="100"
                                     oninput="updatePesoMaimo()">
                             </div>
@@ -1077,8 +1100,8 @@ function mutate(mochila) {
                         </div>
 
                         <div class="grid">
-                            <p>Numero máximo de Gerações: <span id="geracoesSize">10</span></p>
-                            <input type="range" id="geracoes" name="geracoes" min="0" value="10" max="5000"
+                            <p>Numero máximo de Gerações: <span id="geracoesSize">30</span></p>
+                            <input type="range" id="geracoes" name="geracoes" min="0" value="30" max="1000"
                                 oninput="updateGeracao()">
                         </div>
                         <div class="grid">
@@ -1145,8 +1168,13 @@ function mutate(mochila) {
                             <p>Na div abaixo se encontram os gráficos: </p>
                         </div>
                         <div>
-                            <h1 id="melhorInd"></h1>
-                            <h1 id="fitMe"></h1>
+                            
+                            
+                            <table id="tabelaResults">
+                                <!-- A tabela será gerada aqui pelo JavaScript -->
+                            </table>
+                            <h3 id="melhorInd"></h3>
+                            <h3 id="fitMe"></h3>
                         </div>
                     </div>
 
@@ -1348,6 +1376,37 @@ function mutate(mochila) {
             celulaNomeItem.textContent = nome_itens[i];
             celulaPesoItem.textContent = peso_itens[i];
             celulaValorItem.textContent = valor_itens[i];
+        }
+    }
+
+    function mostrarItensMochila() {
+        // Obtendo uma referência ao elemento da tabela onde os itens serão exibidos
+        var tabela = document.getElementById("tabelaResults");
+
+        // Limpando qualquer conteúdo anterior da tabela
+        tabela.innerHTML = "";
+
+        // Criando o cabeçalho da tabela
+        var cabecalho = tabela.createTHead();
+        var linhaCabecalho = cabecalho.insertRow();
+        var celulaNome = linhaCabecalho.insertCell();
+        var celulaPeso = linhaCabecalho.insertCell();
+        var celulaValor = linhaCabecalho.insertCell();
+        celulaNome.textContent = "Nome";
+        celulaPeso.textContent = "Peso";
+        celulaValor.textContent = "Valor";
+
+        // Adicionando os itens à tabela
+        for (var i = 0; i < nome_itens.length; i++) {
+            if(melhorIndividuoResposta[0][i]===1){
+                var linha = tabela.insertRow();
+                var celulaNomeItem = linha.insertCell();
+                var celulaPesoItem = linha.insertCell();
+                var celulaValorItem = linha.insertCell();
+                celulaNomeItem.textContent = nome_itens[i];
+                celulaPesoItem.textContent = peso_itens[i];
+                celulaValorItem.textContent = valor_itens[i];
+            }
         }
     }
 
